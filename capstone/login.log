@@ -1,0 +1,11 @@
+2025-07-11 00:39:32,899 - INFO - User a logged out, Time: 2025-07-11 00:39:32, From: user_sets
+2025-07-11 18:35:35,734 - INFO - User a logged out, Time: 2025-07-11 18:35:35, From: global_func
+2025-07-11 18:52:27,343 - INFO - User a logged out, Time: 2025-07-11 18:52:27, From: global_func
+2025-07-11 19:00:03,004 - WARNING - Empty fields for login attempt 1, Time: 2025-07-11 19:00:03
+2025-07-11 19:00:05,376 - INFO - User a logged in at 2025-07-11 19:00:05
+2025-07-11 19:00:07,919 - INFO - User a logged out, Time: 2025-07-11 19:00:07, From: global_func
+2025-07-17 00:45:01,556 - INFO - User a logged in at 2025-07-17 00:45:01
+2025-07-17 00:50:22,968 - WARNING - Empty fields for login attempt 1, Time: 2025-07-17 00:50:22
+2025-07-17 00:50:27,136 - INFO - User a logged in at 2025-07-17 00:50:27
+2025-07-17 00:56:44,214 - INFO - User a logged in at 2025-07-17 00:56:44
+2025-07-17 01:04:06,596 - INFO - User a logged in at 2025-07-17 01:04:06
