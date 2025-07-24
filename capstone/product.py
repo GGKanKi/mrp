@@ -1,31 +1,22 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, Toplevel
+from tkcalendar import DateEntry
 import re
-import logging
 from datetime import datetime
+import pytz
+import time
+import logging
 from database import DatabaseManager
 
-class ProductManagementSystem:
+class ProductManagementSystem(tk.Toplevel):
     def __init__(self, parent, controller):
         self.parent = parent
         self.window = tk.Toplevel(parent)
         self.window.title("Product Management System")
-        self.window.geometry("800x800")
+        self.window.geometry("1200x700")
         self.window.minsize(600, 600)
         self.window.transient(parent)
         self.window.grab_set()
-        
-        #Logger Files
-        logging.basicConfig(filename='orders.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-        self.order_act = logging.getLogger('ORDER_ACT')
-        self.order_act.setLevel(logging.INFO)
-
-        self.order_warn = logging.getLogger('ORDER_WARNING')
-        self.order_warn.setlevel(logging.WARNING)
-
-        self.order_error = logging.getLogger('ORDER_ERROR')
-        self.order_error.setLevel(logging.ERROR)
-
 
         # Configure window style
         self.window.configure(bg='#f8f9fa')
@@ -104,43 +95,19 @@ class ProductManagementSystem:
         content_container.pack(fill='both', expand=True, padx=40, pady=40)
         
         # Product Information Section
-        product_section = tk.LabelFrame(content_container, 
-                                       text="  📝 Product Information  ", 
-                                       font=('Segoe UI', 16, 'bold'),
-                                       bg='#ffffff',
-                                       fg='#2c3e50',
-                                       relief='solid',
-                                       bd=2,
-                                       padx=25,
-                                       pady=20)
+        product_section = tk.LabelFrame(content_container, text="  📝 Product Information  ", font=('Segoe UI', 16, 'bold'),bg='#ffffff',fg='#2c3e50', relief='solid', bd=2,padx=25, pady=20)
         product_section.pack(fill='x', pady=(0, 25))
         
         # Product name input
         tk.Label(product_section, 
-                text="Product Name:",
-                                font=('Segoe UI', 12, 'bold'),
-                bg='#ffffff',
-                fg='#34495e').pack(anchor='w', pady=(0, 8))
+                text="Product Name:",font=('Segoe UI', 12, 'bold'),bg='#ffffff',fg='#34495e').pack(anchor='w', pady=(0, 8))
         
         self.product_name_var = tk.StringVar()
-        product_entry = tk.Entry(product_section, 
-                               textvariable=self.product_name_var, 
-                               font=('Segoe UI', 12),
-                               relief='solid',
-                               bd=2,
-                               width=60)
+        product_entry = tk.Entry(product_section, textvariable=self.product_name_var, font=('Segoe UI', 12),relief='solid',bd=2,width=60)
         product_entry.pack(fill='x', pady=(0, 20), ipady=8)
         
         # Materials Management Section
-        materials_section = tk.LabelFrame(content_container, 
-                                         text="  🔧 Materials Management  ", 
-                                         font=('Segoe UI', 16, 'bold'),
-                                         bg='#ffffff',
-                                         fg='#2c3e50',
-                                         relief='solid',
-                                         bd=2,
-                                         padx=25,
-                                         pady=20)
+        materials_section = tk.LabelFrame(content_container, text="  🔧 Materials Management  ", font=('Segoe UI', 16, 'bold'),bg='#ffffff',fg='#2c3e50',relief='solid',bd=2,padx=25,pady=20)
         materials_section.pack(fill='both', expand=True, pady=(0, 25))
         
         # Material input section
@@ -405,13 +372,17 @@ class ProductManagementSystem:
                 bg='#ffffff',
                 fg='#34495e').grid(row=0, column=2, sticky='w', padx=(0, 15), pady=8)
         
-        self.order_deadline_var = tk.StringVar()
-        deadline_entry = tk.Entry(details_grid, 
-                                 textvariable=self.order_deadline_var, 
-                                 font=('Segoe UI', 11),
-                                 relief='solid',
-                                 bd=2,
-                                 width=25)
+        self.deadline_tab = tk.StringVar()
+        deadline_entry = DateEntry(details_grid, 
+                                textvariable=self.deadline_tab, 
+                                font=('Segoe UI', 11),
+                                relief='solid',
+                                bd=2,
+                                width=25,
+                                date_pattern='mm/dd/yyyy',
+                                background='#f8f9fa',
+                                foreground='#34495e',
+                                calendar_background='#f8f9fa')
         deadline_entry.grid(row=0, column=3, sticky='ew', padx=(0, 20), pady=8, ipady=6)
         
         # Calculate button
@@ -731,7 +702,7 @@ class ProductManagementSystem:
         """Edit an existing product"""
         edit_window = tk.Toplevel(self.window)
         edit_window.title("Edit Product")
-        edit_window.geometry("800x600")
+        edit_window.geometry("800x800")
         edit_window.minsize(700, 500)
         edit_window.transient(self.window)
         edit_window.grab_set()
@@ -926,7 +897,7 @@ class ProductManagementSystem:
         tree_frame.pack(fill='both', expand=True, pady=(0, 20))
         
         # Create Treeview for product display
-        columns = ('ID', 'Name', 'Materials', 'Created Date')
+        columns = ('ID', 'Name', 'Materials', 'Created Date', 'Status Quo')
         product_tree = ttk.Treeview(tree_frame, columns=columns, show='headings', height=15)
         
         # Configure headings
@@ -934,12 +905,14 @@ class ProductManagementSystem:
         product_tree.heading('Name', text='Product Name')
         product_tree.heading('Materials', text='Materials')
         product_tree.heading('Created Date', text='Created Date')
+        product_tree.heading('Status Quo', text='Status Quo')
         
         # Configure columns
         product_tree.column('ID', width=150, minwidth=120)
         product_tree.column('Name', width=200, minwidth=150)
         product_tree.column('Materials', width=400, minwidth=300)
         product_tree.column('Created Date', width=150, minwidth=120)
+        product_tree.column('Status Quo', width=150, minwidth=120)
         
         # Add scrollbars
         v_scrollbar = ttk.Scrollbar(tree_frame, orient="vertical", command=product_tree.yview)
@@ -961,7 +934,7 @@ class ProductManagementSystem:
                 products = self.db_manager.get_all_products()
                 
                 for product in products:
-                    product_id, name, materials, created_date = product
+                    product_id, name, materials, created_date, status_quo = product
                     
                     if created_date:
                         try:
@@ -982,7 +955,8 @@ class ProductManagementSystem:
                         product_id or 'N/A',
                         name or 'N/A',
                         display_materials,
-                        formatted_date
+                        formatted_date,
+                        status_quo or 'N/A'
                     ))
                     
             except Exception as e:
@@ -1013,7 +987,56 @@ class ProductManagementSystem:
             except Exception as e:
                 messagebox.showerror("Database Error", f"Error loading product details: {str(e)}")
         
+        def approve_selected_product():
+            "Approve Product if materials are available"
+            selection = product_tree.selection()
+            if not selection:
+                messagebox.showwarning("No Selection", "Please select a product to approve.")
+                return
+            
+            item = product_tree.item(selection[0])
+            values = item['values']
+            prod_id = values[0]
+            prod_name = values[1]
+
+            conn = self.db_manager.get_connection()
+            c = conn.cursor()
+
+            status = 'Approved'
+
+            c.execute("UPDATE products SET status_quo = ? WHERE product_id = ?", (status, prod_id))
+            messagebox.showinfo("Success", f"Product '{prod_name}' approved successfully!")
+
+            conn.commit()
+            conn.close()
+            load_products()  # Refresh the list
+
+        def cancel_selected_product():
+            "Soft Deletion of Prod (cancel order can potentially be continued later)"
+            selection = product_tree.selection()
+            if not selection:
+                messagebox.showwarning("No Selection", "Please select a product to approve.")
+                return
+            
+            item = product_tree.item(selection[0])
+            values = item['values']
+            prod_id = values[0]
+            prod_name = values[1]
+
+            conn = self.db_manager.get_connection()
+            c = conn.cursor()
+
+            status = 'Cancelled'
+
+            c.execute("UPDATE products SET status_quo = ? WHERE product_id = ?", (status, prod_id))
+            messagebox.showinfo(f"Product '{prod_name}' has been cancelled.")
+
+            conn.commit()
+            conn.close()
+            load_products()  # Refresh the list        
+        
         def delete_selected_product():
+            "Hard Deletion of Products"
             selection = product_tree.selection()
             if not selection:
                 messagebox.showwarning("No Selection", "Please select a product to delete.")
@@ -1030,7 +1053,7 @@ class ProductManagementSystem:
         def refresh_products():
             load_products()
         
-        # Action buttons
+        # Action buttons (Status Can only be updated through these buttons)
         edit_btn = tk.Button(button_frame, 
                             text="✏️ Edit Selected", 
                             command=edit_selected_product,
@@ -1042,7 +1065,34 @@ class ProductManagementSystem:
                             padx=20,
                             pady=8)
         edit_btn.pack(side=tk.LEFT, padx=(0, 10))
-        
+
+        #Approve
+        approve_btn = tk.Button(button_frame, 
+                              text="✅ Approve Selected",
+                              command=approve_selected_product,
+                              font=('Segoe UI', 11, 'bold'),
+                              bg='#27ae60',
+                              fg='white',
+                              relief='flat',
+                              cursor='hand2',
+                              padx=20,
+                              pady=8)
+        approve_btn.pack(side=tk.LEFT, padx=(0, 10))        
+
+        # Cancel
+        cancel_btn = tk.Button(button_frame, 
+                            text="✏️ Cancel Selected", 
+                            command=cancel_selected_product,
+                            font=('Segoe UI', 11, 'bold'),
+                            bg='#95a5a6',
+                            fg='white',
+                            relief='flat',
+                            cursor='hand2',
+                            padx=20,
+                            pady=8)
+        cancel_btn.pack(side=tk.LEFT, padx=(0, 10))
+
+        # Delete
         delete_btn = tk.Button(button_frame, 
                               text="🗑️ Delete Selected", 
                               command=delete_selected_product,
@@ -1099,7 +1149,7 @@ class ProductManagementSystem:
         selected_product = self.selected_product_var.get().strip()
         selected_client = self.selected_client_var.get().strip()
         quantity = self.order_quantity_var.get().strip()
-        deadline = self.order_deadline_var.get().strip()
+        deadline = self.deadline_tab.get().strip()
         
         # Validation
         if not order_name:
@@ -1145,7 +1195,7 @@ class ProductManagementSystem:
             self.selected_product_var.set("")
             self.selected_client_var.set("")
             self.order_quantity_var.set("")
-            self.order_deadline_var.set("")
+            self.deadline_tab.set("")
             
             # Clear calculation displays
             self.product_materials_text.config(state='normal')
@@ -1276,18 +1326,22 @@ class ProductManagementSystem:
         
         tk.Label(details_grid, 
                 text="Deadline:", 
-                font=('Segoe UI', 11, 'bold'),
+                font=('Segoe UI', 12, 'bold'),
                 bg='#ffffff',
                 fg='#34495e').grid(row=0, column=2, sticky='w', padx=(0, 15), pady=8)
-        
+
         edit_deadline_var = tk.StringVar(value=deadline)
-        deadline_entry = tk.Entry(details_grid, 
-                                 textvariable=edit_deadline_var, 
-                                 font=('Segoe UI', 11),
-                                 relief='solid',
-                                 bd=2,
-                                 width=20)
-        deadline_entry.grid(row=0, column=3, sticky='ew', pady=8, ipady=6)
+        deadline_entry = DateEntry(details_grid, 
+                                textvariable=self.order_deadline_var, 
+                                font=('Segoe UI', 11),
+                                relief='solid',
+                                bd=2,
+                                width=25,
+                                date_pattern='mm/dd/yyyy',
+                                background='#f8f9fa',
+                                foreground='#34495e',
+                                calendar_background='#f8f9fa')
+        deadline_entry.grid(row=0, column=3, sticky='ew', padx=(0, 20), pady=8, ipady=6)
         
         # Load products and clients for dropdowns
         try:
@@ -1430,7 +1484,7 @@ class ProductManagementSystem:
         tree_frame.pack(fill='both', expand=True, pady=(0, 20))
         
         # Create Treeview for order display
-        columns = ('ID', 'Name', 'Product', 'Client', 'Quantity', 'Deadline', 'Order Date')
+        columns = ('ID', 'Name', 'Product', 'Client', 'Quantity', 'Deadline', 'Order Date', 'Status Quo')
         order_tree = ttk.Treeview(tree_frame, columns=columns, show='headings', height=15)
         
         # Configure headings
@@ -1441,6 +1495,8 @@ class ProductManagementSystem:
         order_tree.heading('Quantity', text='Quantity')
         order_tree.heading('Deadline', text='Deadline')
         order_tree.heading('Order Date', text='Order Date')
+        order_tree.heading('Status Quo', text='Status Quo')
+
         
         # Configure columns
         order_tree.column('ID', width=120, minwidth=100)
@@ -1450,6 +1506,7 @@ class ProductManagementSystem:
         order_tree.column('Quantity', width=80, minwidth=60)
         order_tree.column('Deadline', width=120, minwidth=100)
         order_tree.column('Order Date', width=120, minwidth=100)
+        order_tree.column('Status Quo', width=100, minwidth=80)
         
         # Add scrollbars
         v_scrollbar = ttk.Scrollbar(tree_frame, orient="vertical", command=order_tree.yview)
@@ -1471,7 +1528,7 @@ class ProductManagementSystem:
                 orders = self.db_manager.get_all_orders()
                 
                 for order in orders:
-                    order_id, name, product_name, client_name, quantity, deadline, order_date, product_id, client_id = order
+                    order_id, name, product_name, client_name, quantity, deadline, order_date, product_id, client_id, status_quo = order
                     
                     if order_date:
                         try:
@@ -1494,7 +1551,8 @@ class ProductManagementSystem:
                         client_name or 'N/A',
                         quantity or 'N/A',
                         deadline or 'N/A',
-                        formatted_date
+                        formatted_date or 'N/A',
+                        status_quo or 'N/A'
                     ), tags=(product_id, client_id))
                     
             except Exception as e:
@@ -1525,8 +1583,57 @@ class ProductManagementSystem:
             
             self.edit_order(order_id, order_name, product_id, client_id, quantity, deadline)
             load_orders()  # Refresh the list
-        
+
+        #The Status Quo can only be updated through the Approve, Cancel and Delete Buttons
+        def approved_selected_order():
+            "Approval of an order if Materials are available (ordered)"
+            selection = order_tree.selection()
+            if not selection:
+                messagebox.showwarning("No Selection", "Please select an order to delete.")
+                return
+
+            item = order_tree.item(selection[0])
+            values = item['values']
+            order_id = values[0]
+
+
+            status = 'Approved'
+
+            conn = self.db_manager.get_connection()
+            c = conn.cursor()
+
+            c.execute("UPDATE orders SET status_quo = ? WHERE order_id = ?", (status,  order_id))
+
+            conn.commit()
+            conn.close()
+            messagebox.showinfo("Success", f"Order '{order_id}' materials have been approved!")
+            load_orders() 
+
+        def cancel_selected_order():
+            selection = order_tree.selection()
+            if not selection:
+                messagebox.showwarning("No Selection", "Please select an order to delete.")
+                return
+
+            item = order_tree.item(selection[0])
+            values = item['values']
+            order_id = values[0]
+
+
+            status = 'Cancelled'
+
+            conn = self.db_manager.get_connection()
+            c = conn.cursor()
+
+            c.execute("UPDATE orders SET status_quo = ? WHERE order_id = ?", (status,  order_id))
+
+            conn.commit()
+            conn.close()
+            messagebox.showinfo("Success", f"Order '{order_id}' has been cancelled successfully!")
+            load_orders()  # Refresh the list
+
         def delete_selected_order():
+            "Hard Deletion of an Order"
             selection = order_tree.selection()
             if not selection:
                 messagebox.showwarning("No Selection", "Please select an order to delete.")
@@ -1555,6 +1662,31 @@ class ProductManagementSystem:
                             padx=20,
                             pady=8)
         edit_btn.pack(side=tk.LEFT, padx=(0, 10))
+
+        #Approve
+        approve_btn = tk.Button(button_frame, 
+                              text="✅ Approve Selected",
+                              command=approved_selected_order,
+                              font=('Segoe UI', 11, 'bold'),
+                              bg='#27ae60',
+                              fg='white',
+                              relief='flat',
+                              cursor='hand2',
+                              padx=20,
+                              pady=8)
+        approve_btn.pack(side=tk.LEFT, padx=(0, 10))        
+
+        cancel_btn = tk.Button(button_frame, 
+                            text="✏️ Cancel Selected", 
+                            command=cancel_selected_order,
+                            font=('Segoe UI', 11, 'bold'),
+                            bg='#95a5a6',
+                            fg='white',
+                            relief='flat',
+                            cursor='hand2',
+                            padx=20,
+                            pady=8)
+        cancel_btn.pack(side=tk.LEFT, padx=(0, 10))
         
         delete_btn = tk.Button(button_frame, 
                               text="🗑️ Delete Selected", 
@@ -1752,8 +1884,3 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = MainMenu(root)
     root.mainloop()
-
-
-
-
-
