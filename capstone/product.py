@@ -6,8 +6,9 @@ from datetime import datetime
 import pytz
 import time
 import logging
+import json
 from database import DatabaseManager
-
+from global_func import export_materials_to_json
 class ProductManagementSystem(tk.Toplevel):
     def __init__(self, parent, controller):
         self.parent = parent
@@ -541,48 +542,44 @@ class ProductManagementSystem(tk.Toplevel):
             self.product_materials_text.config(state='disabled')
     
     def parse_materials(self, materials_string):
-        """Parse materials string and extract material names and quantities"""
+        """Parse materials string and return a dictionary {x:y}"""
         if not materials_string:
-            return []
-        
-        materials = []
-        # Split by semicolon or comma
+            return {}
+
+        materials = {}
         items = re.split(r'[;,]', materials_string)
-        
+
         for item in items:
             item = item.strip()
             if not item:
                 continue
-                
-            # Try to extract material name and quantity
-            # Format: "Material Name - Quantity" or "Material Name: Quantity"
+
             match = re.search(r'(.+?)\s*[-:]\s*([0-9]+)', item)
             if match:
                 material_name = match.group(1).strip()
                 try:
                     quantity = int(match.group(2))
-                    materials.append((material_name, quantity))
+                    materials[material_name] = quantity
                 except ValueError:
-                    # If quantity parsing fails, treat as text
-                    materials.append((item, 0))
+                    materials[material_name] = 0
             else:
-                # If no quantity found, treat as text with 0 quantity
-                materials.append((item, 0))
-        
+                materials[item] = 0
+
         return materials
+
 
     def calculate_materials(self):
         """Calculate required materials based on quantity"""
         selected_product = self.selected_product_var.get().strip()
         quantity_str = self.order_quantity_var.get().strip()
-        
+
         if not selected_product or not quantity_str:
             self.required_materials_text.config(state='normal')
             self.required_materials_text.delete(1.0, tk.END)
             self.required_materials_text.insert(1.0, "Please select a product and enter quantity to calculate materials.")
             self.required_materials_text.config(state='disabled')
             return
-        
+
         try:
             quantity = int(quantity_str)
             if quantity <= 0:
@@ -593,25 +590,32 @@ class ProductManagementSystem(tk.Toplevel):
             self.required_materials_text.insert(1.0, "Please enter a valid positive whole number for quantity.")
             self.required_materials_text.config(state='disabled')
             return
-        
+
         try:
             # Extract product ID from selection
             product_id = selected_product.split('(')[-1].strip(')')
             materials_string = self.db_manager.get_product_materials(product_id)
-            
+
             if materials_string:
-                materials_list = self.parse_materials(materials_string)
-                
-                if materials_list:
+                try:
+                    materials_dict = json.loads(materials_string)  # Convert JSON string to dict
+                except json.JSONDecodeError:
+                    self.required_materials_text.config(state='normal')
+                    self.required_materials_text.delete(1.0, tk.END)
+                    self.required_materials_text.insert(1.0, "Materials format is not valid JSON.")
+                    self.required_materials_text.config(state='disabled')
+                    return
+
+                if materials_dict:
                     calculation_text = f"For {quantity} units:\n\n"
-                    
-                    for material_name, unit_quantity in materials_list:
+
+                    for material_name, unit_quantity in materials_dict.items():
                         if unit_quantity > 0:
                             total_needed = unit_quantity * quantity
                             calculation_text += f"• {material_name}: {unit_quantity} × {quantity} = {total_needed}\n"
                         else:
                             calculation_text += f"• {material_name}: (quantity not specified)\n"
-                    
+
                     self.required_materials_text.config(state='normal')
                     self.required_materials_text.delete(1.0, tk.END)
                     self.required_materials_text.insert(1.0, calculation_text)
@@ -626,12 +630,13 @@ class ProductManagementSystem(tk.Toplevel):
                 self.required_materials_text.delete(1.0, tk.END)
                 self.required_materials_text.insert(1.0, "No materials found for this product.")
                 self.required_materials_text.config(state='disabled')
-                
+
         except Exception as e:
             self.required_materials_text.config(state='normal')
             self.required_materials_text.delete(1.0, tk.END)
             self.required_materials_text.insert(1.0, f"Error calculating materials: {str(e)}")
             self.required_materials_text.config(state='disabled')
+
     
     def add_material(self):
         """Add material to the current materials list"""
@@ -694,6 +699,7 @@ class ProductManagementSystem(tk.Toplevel):
             self.load_products_and_clients()
             
             messagebox.showinfo("Success", f"Product '{product_name}' created successfully!\nProduct ID: {product_id}")
+            export_materials_to_json("main.db", "products_materials.json")
             
         except Exception as e:
             messagebox.showerror("Database Error", f"Error creating product: {str(e)}")
