@@ -5,6 +5,7 @@ from datetime import datetime
 import logging
 import os
 import sys
+import json
 from customtkinter import CTkImage, CTkButton, CTkFrame
 from PIL import Image
 
@@ -43,16 +44,19 @@ def on_show(self):
 
 def handle_logout(self):
     """Handle user logout and log the action."""
-    # Log the logout action
     self.logout_info = logging.getLogger('logout_info')
     self.logout_info.setLevel(logging.INFO)
-    logout_handler = logging.FileHandler('login.txt')
-    logout_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    logout_handler.setFormatter(logout_formatter)
-    self.logout_info.addHandler(logout_handler)
 
+    if not self.logout_info.handlers:
+        logout_handler = logging.FileHandler('login.log')
+        logout_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        logout_handler.setFormatter(logout_formatter)
+        self.logout_info.addHandler(logout_handler)
+
+    # Log the logout
     self.logout_info.info(f"User {self.controller.session.get('user_id')} logged out, Time: {datetime.now(pytz.timezone('Asia/Manila')).strftime('%Y-%m-%d %H:%M:%S')}")
-    
+
+    # Log to DB
     user_id = self.controller.session.get('user_id')
     if user_id:
         conn = sqlite3.connect('main.db')
@@ -62,4 +66,33 @@ def handle_logout(self):
         print('DEBUG: User logged out:', user_id, timestamp)
         conn.commit()
         conn.close()
+
     self.controller.show_frame(FrameNames.LOGIN)
+
+def export_materials_to_json(db_path, output_file):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT product_id, product_name, materials FROM products")
+    rows = cursor.fetchall()
+
+    export_data = []
+
+    for product_id, product_name, materials_string in rows:
+        try:
+            materials_dict = json.loads(materials_string) 
+        except json.JSONDecodeError:
+            materials_dict = {"raw": materials_string} 
+
+        export_data.append({
+            "product_id": product_id,
+            "product_name": product_name,
+            "materials": materials_dict
+        })
+
+    # Write to JSON file
+    with open(output_file, 'w') as file:
+        json.dump(export_data, file, indent=4)
+
+    conn.close()
+    print(f"✅ Exported to {output_file}")
