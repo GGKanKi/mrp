@@ -95,4 +95,3 @@ def export_materials_to_json(db_path, output_file):
         json.dump(export_data, file, indent=4)
 
     conn.close()
-    print(f"✅ Exported to {output_file}")
