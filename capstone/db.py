@@ -52,8 +52,7 @@ c.execute("""
     )
 """)
 
-c.execute("INSERT INTO messages (sender_id, receiver_id, subject, body, timestamp, is_read) VALUES (?, ?, ?, ?, ?, 0)", 
-          ('user001', 'user002', 'Test Subject', 'Test Body', '2025-06-08 12:00:00'))
+
 
 
 #User Activity Logs Table
@@ -85,10 +84,10 @@ c.execute('''
         product_id TEXT PRIMARY KEY,
         product_name TEXT,
         materials TEXT,
-        created_date DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+        status_quo TEXT DEFAULT 'Pending',
     )
 ''')
-
 
 
 # Raw Materials Table
@@ -114,8 +113,8 @@ c.execute("""
         order_date DATETIME DEFAULT CURRENT_TIMESTAMP,
         order_dl TEXT,
         order_amount REAL,
-        mats_used TEXT,
         client_id TEXT NOT NULL,
+        status_quo TEXT DEFAULT 'Pending',
         FOREIGN KEY (product_id) REFERENCES products(product_id)
             ON DELETE CASCADE
             ON UPDATE CASCADE,
@@ -124,6 +123,7 @@ c.execute("""
             ON UPDATE CASCADE
     )
 """)
+
 
 # Commit changes and close the connection
 conn.commit()
