@@ -7,8 +7,11 @@ import pytz
 import time
 import logging
 import json
+
+#Imported Classses/Functions
 from database import DatabaseManager
 from global_func import export_materials_to_json
+
 class ProductManagementSystem(tk.Toplevel):
     def __init__(self, parent, controller):
         self.parent = parent
@@ -994,28 +997,71 @@ class ProductManagementSystem(tk.Toplevel):
                 messagebox.showerror("Database Error", f"Error loading product details: {str(e)}")
         
         def approve_selected_product():
-            "Approve Product if materials are available"
+            """Deduct the materials used in a Product from the Inventory Table"""
+            with open('D:/capstone/products_materials.json', 'r') as f:
+                product_list = json.load(f)
+
             selection = product_tree.selection()
             if not selection:
                 messagebox.showwarning("No Selection", "Please select a product to approve.")
                 return
-            
+
             item = product_tree.item(selection[0])
             values = item['values']
-            prod_id = values[0]
-            prod_name = values[1]
+            prod_id = values[0]  
+
+            # Find matching product in JSON
+            selected_product = next((p for p in product_list if p['product_id'] == prod_id), None)
+            if not selected_product:
+                messagebox.showerror("Error", f"Product ID {prod_id} not found in JSON file.")
+                return
+
+            prod_name = selected_product['product_name']
+            prod_mats = selected_product['materials']
 
             conn = self.db_manager.get_connection()
             c = conn.cursor()
 
-            status = 'Approved'
+            try:
+                unavailable_mats = []
 
-            c.execute("UPDATE products SET status_quo = ? WHERE product_id = ?", (status, prod_id))
-            messagebox.showinfo("Success", f"Product '{prod_name}' approved successfully!")
+                for mat_name, mat_qty in selected_product['materials'].items():
+                    c.execute("SELECT mat_volume, mat_name FROM raw_mats WHERE mat_name = ?", (mat_name,))
+                    result = c.fetchone()
+
+                    if result:
+                        current_qty, updated_mat_name = result
+                        if current_qty >= mat_qty:
+                            new_qty = current_qty - mat_qty
+                            c.execute("UPDATE raw_mats SET mat_volume = ? WHERE mat_name = ?", (new_qty, updated_mat_name))
+                        else:
+                            unavailable_mats.append(
+                                f"{updated_mat_name} (needed: {mat_qty}, available: {current_qty})"
+                            )
+                    else:
+                        unavailable_mats.append(f"Material Name {mat_name} not found")
+
+                if unavailable_mats:
+                    error_message = (
+                        f"❌ Cannot approve product {prod_name} (ID: {prod_id}) due to:\n\n" +
+                        "\n".join(f"- {item}" for item in unavailable_mats)
+                    )
+                    messagebox.showerror("Insufficient Materials", error_message)
+                    status_pend = 'Pending'
+                    c.execute('UPDATE products SET status_quo = ? WHERE product_id = ?', (status_pend, prod_id,))
+                else:
+                    status_approve = 'Approved'
+                    c.execute('UPDATE products SET status_quo = ? WHERE product_id = ?', (status_approve, prod_id,))
+                    messagebox.showinfo("Success", f"✅ Approved product {prod_name} (ID: {prod_id}) and deducted materials.")
+
+            except Exception as e:
+                messagebox.showerror("Database Error", f"An error occurred: {e}")
 
             conn.commit()
             conn.close()
-            load_products()  # Refresh the list
+
+            load_products()  # Refresh the product tree
+
 
         def cancel_selected_product():
             "Soft Deletion of Prod (cancel order can potentially be continued later)"
@@ -1029,17 +1075,21 @@ class ProductManagementSystem(tk.Toplevel):
             prod_id = values[0]
             prod_name = values[1]
 
-            conn = self.db_manager.get_connection()
-            c = conn.cursor()
+            try:
+                conn = self.db_manager.get_connection()
+                c = conn.cursor()
 
-            status = 'Cancelled'
+                status = 'Cancelled'
 
-            c.execute("UPDATE products SET status_quo = ? WHERE product_id = ?", (status, prod_id))
-            messagebox.showinfo(f"Product '{prod_name}' has been cancelled.")
+                c.execute("UPDATE products SET status_quo = ? WHERE product_id = ?", (status, prod_id))
+                messagebox.showinfo(f"Product '{prod_name}' has been cancelled.")
 
-            conn.commit()
-            conn.close()
-            load_products()  # Refresh the list        
+                conn.commit()
+                conn.close()
+                load_products()  # Refresh the list
+            except Exception as e:
+                messagebox.showerror("Database Error", f"Error cancelling product: {str(e)}")
+                load_products()
         
         def delete_selected_product():
             "Hard Deletion of Products"
