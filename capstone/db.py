@@ -85,7 +85,7 @@ c.execute('''
         product_name TEXT,
         materials TEXT,
         created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-        status_quo TEXT DEFAULT 'Pending',
+        status_quo TEXT DEFAULT 'Pending'
     )
 ''')
 
@@ -123,6 +123,8 @@ c.execute("""
             ON UPDATE CASCADE
     )
 """)
+
+
 
 
 # Commit changes and close the connection
