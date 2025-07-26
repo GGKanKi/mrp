@@ -1,14 +1,20 @@
 from pages_handler import FrameNames
 import sqlite3
 import pytz
+import re
 from datetime import datetime
 import logging
 import os
 import sys
-import json
+import threading
 from customtkinter import CTkImage, CTkButton, CTkFrame
+from tkinter import messagebox
 from PIL import Image
 
+#Data Imports
+import json
+
+#Import Functions
 
 def on_show(self):
     for widget in self.main.winfo_children():
@@ -69,29 +75,61 @@ def handle_logout(self):
 
     self.controller.show_frame(FrameNames.LOGIN)
 
-def export_materials_to_json(db_path, output_file):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
 
-    cursor.execute("SELECT product_id, product_name, materials FROM products")
-    rows = cursor.fetchall()
+import sqlite3
+import json
+import threading
+import re
+import logging
 
-    export_data = []
+def export_materials_to_json(db_path: str, output_file: str) -> None:
+    """Exports product materials to JSON in a background thread."""
 
-    for product_id, product_name, materials_string in rows:
+    def _export_thread():
         try:
-            materials_dict = json.loads(materials_string) 
-        except json.JSONDecodeError:
-            materials_dict = {"raw": materials_string} 
+            with sqlite3.connect(db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT product_id, product_name, materials FROM products")
+                rows = cursor.fetchall()
 
-        export_data.append({
-            "product_id": product_id,
-            "product_name": product_name,
-            "materials": materials_dict
-        })
+            export_data = []
 
-    # Write to JSON file
-    with open(output_file, 'w') as file:
-        json.dump(export_data, file, indent=4)
+            for product_id, product_name, materials in rows:
+                if materials:
+                    try:
+                        materials_dict = json.loads(materials)
+                    except json.JSONDecodeError:
+                        materials_dict = {}
+                        for item in re.split(r'[;,]', materials):
+                            parts = item.strip().split('-')
+                            if len(parts) == 2:
+                                name = parts[0].strip()
+                                try:
+                                    qty = int(parts[1].strip())
+                                    materials_dict[name] = qty
+                                except ValueError:
+                                    continue
+                        if not materials_dict:
+                            materials_dict = {"raw": materials}
+                else:
+                    materials_dict = {}
 
-    conn.close()
+                export_data.append({
+                    "product_id": product_id,
+                    "product_name": product_name,
+                    "materials": materials_dict
+                })
+
+            with open(output_file, 'w') as f:
+                json.dump(export_data, f, indent=4)
+
+            logging.info(f"✅ Exported {len(export_data)} products to {output_file}")
+        except Exception as e:
+            logging.error(f"❌ Export failed: {e}")
+
+    # Start the export in a background thread
+    thread = threading.Thread(target=_export_thread)
+    thread.start()
+
+
+export_materials_to_json("main.db", "products_materials.json")
