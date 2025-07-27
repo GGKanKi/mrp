@@ -15,15 +15,17 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import uuid
 import bcrypt
+
+
+#Data Imports
 import pandas as pd
+import json
 import os
 import sys
 sys.path.append("D:/capstone")
 
 #File imports
-from mrp_calc import SimpleInventory
 from product import ProductManagementSystem
-from database import DatabaseManager
 from pages_handler import FrameNames
 from global_func import on_show, handle_logout
 
@@ -60,13 +62,15 @@ class OrdersPage(tk.Frame):
 
             #Crud Buttons
             self.search_entry = ctk.CTkEntry(self, placeholder_text="Search...")
-            self.search_entry.pack(side="left",anchor="n", padx=(15, 20), ipadx=150)
+            self.search_entry.pack(side="left",anchor="n", padx=(15, 20), ipadx=100)
 
-            self.srch_btn = self.add_del_upd('SEARCH', command=self.srch_order)
-            self.add_btn = self.add_del_upd('ADD ORDER', command=self.add_orders)
-            self.del_btn = self.add_del_upd('DELETE ORDER', command=self.del_order)
-            self.excel_btn = self.add_del_upd('UPDATE ORDER', command=self.upd_order)
-            #self.mrp_calc = self.add_del_upd('MRP', command=self.add_ord_info)
+            # Add Approve, Cancel for Status
+            self.srch_btn = self.add_del_upd('SEARCH', '#5dade2',command=self.srch_order)
+            self.add_btn = self.add_del_upd('ADD ORDER', '#2ecc71', command=self.add_orders)
+            self.approve_order_btn = self.add_del_upd('APPROVE ORDER', '#27ae60',command=self.approve_order)
+            self.cancel_order_btn = self.add_del_upd('CANCEL ORDER', '#95a5a6', command=self.cancel_order)
+            self.del_btn = self.add_del_upd('DELETE ORDER', '#e74c3c', command=self.del_order)
+            self.excel_btn = self.add_del_upd('UPDATE ORDER', '#f39c12', command=self.upd_order)
 
             # Treeview style
             style = ttk.Style(self)
@@ -81,7 +85,7 @@ class OrdersPage(tk.Frame):
             self.order_tree = ttk.Treeview(        
             tree_frame,
                 columns=('order_id', 'order_name', 'product_id', 'order_date', 
-                        'order_dl', 'order_amount', 'mats_used', 'client_id'),
+                        'order_dl', 'order_amount', 'client_id', 'status_quo'),
                 show='headings',
                 style='Treeview'
             )
@@ -95,8 +99,8 @@ class OrdersPage(tk.Frame):
             self._column_heads('order_date', 'ORDER DATE')
             self._column_heads('order_dl', 'DEADLINE')
             self._column_heads('order_amount', 'VOLUME')
-            self._column_heads('mats_used', 'MATERIALS')
             self._column_heads('client_id', 'CLIENT ID')
+            self._column_heads('status_quo', 'STATUS')
 
             # Configure column widths and stretching
             for col in self.order_tree['columns']:
@@ -146,10 +150,90 @@ class OrdersPage(tk.Frame):
         # Open the SimpleInventory top-level window
         # You can prevent multiple windows by keeping a reference if you want
         self.inventory_window = ProductManagementSystem(self, self.controller)
-        self.inventory_window.grab_set()
-        self.inventory_window.focus_force()
+
+    #Checking the product status before verifying the order
+    def approve_order(self):
+        selected = self.order_tree.focus()
+        if not selected:
+            messagebox.showwarning("No selection", "Please select an order to approve.")
+            return
+        
+        values = self.order_tree.item(selected, 'values')
+        order_id = values[0]
+
+
+        conn = sqlite3.connect('main.db')
+        c = conn.cursor()
+
+        try:
+            c.execute("""
+                        SELECT o.order_id, o.status_quo, p.product_id, p.status_quo
+                        FROM orders o
+                        JOIN products p ON o.product_id = p.product_id where o.order_id = ?
+                        """, (order_id,))
+
+
+            row = c.fetchone()
+
+            if not row:
+                messagebox.showinfo("Not Found", f"No orders found with ID '{order_id}'")
+                return
+            else:
+                join_order_id = order_id
+                order_stat = row[1]
+                product_id = row[2]
+                product_stat = row[3]
+
+                if order_stat == 'Pending':
+                    if product_stat == 'Approved':
+                        new_status = 'Approved'
+                        c.execute('UPDATE orders SET status_quo = ? where order_id = ?', (new_status, join_order_id))
+                    elif product_stat == 'Pending' or product_stat == 'Cancelled':
+                        messagebox.showwarning("Pending Product", f"Product ID '{product_id}' is not approved yet.")
+                        return
+                elif order_stat == 'Approved':
+                    messagebox.showinfo("Already Approved", f"Order ID '{join_order_id}' is already approved.")
+                    return
+                elif order_stat == 'Cancelled':
+                    messagebox.askyesno("Cancelled Order", f"Order ID '{join_order_id}' has been cancelled. Do you want to approve it again?")
+                    new_status = 'Approved'
+                    c.execute('UPDATE orders SET status_quo = ? where order_id = ?', (new_status, join_order_id))
+                else:
+                    return
+
+        except sqlite3.Error as e:
+            messagebox.showerror("Database Error", str(e))
+    
+        conn.commit()
+        conn.close()
+        
+        self.load_orders_from_db()
+
+
+    def cancel_order(self):
+        selected = self.order_tree.focus()
+        if not selected:
+            messagebox.showwarning("No selection", "Please select an order to approve.")
+            return
+        
+        values = self.order_tree.item(selected, 'values')
+        order_id = values[0]
+        order_stat = values[7]
+
+        status = 'Cancelled'
+
+        conn = sqlite3.connect('main.db')
+        c = conn.cursor()
+
+        c.execute("UPDATE orders SET status_quo = ? WHERE order_id = ?", (status, order_id))
+        messagebox.showinfo("Success", f"Order ID '{order_id}' has been cancelled.")
+
+        conn.commit()
+        conn.close()
+        self.load_orders_from_db()
 
     def del_order(self):
+        #Hard Deletion
         selected = self.order_tree.focus()
         if not selected:
             messagebox.showwarning("No selection", "Please select a order to delete.")
@@ -196,8 +280,8 @@ class OrdersPage(tk.Frame):
         top.geometry("500x500")
         top.config(bg="white")
 
-        fields = ['Order ID', "Order Name", 'Product', "Order Date", 'Deadline', "Order Volume", 'Materials', "Client ID"]
-        db_cols = ['order_id', 'order_name', 'product_id', 'order_date', 'order_dl', 'order_amount', 'mats_used', 'client_id']
+        fields = ['Order ID', "Order Name", 'Product', "Order Date", 'Deadline', "Order Volume", "Client ID"]
+        db_cols = ['order_id', 'order_name', 'product_id', 'order_date', 'order_dl', 'order_amount', 'client_id']
         entries = []
 
         read_only_fields = ['Order ID', 'Order Date', 'Product', 'Client ID']
@@ -301,8 +385,8 @@ class OrdersPage(tk.Frame):
         txt.configure(state="disabled")
         txt.pack(expand=True, fill="both", padx=10, pady=10)
 
-    def add_del_upd(self, text, command):
-        button = CTkButton(self, text=text, width=80, command=command)
+    def add_del_upd(self, text, fg_color, command):
+        button = CTkButton(self, text=text, fg_color=fg_color, width=80, command=command)
         button.pack(side="left", anchor="n", padx=5)
 
     def _column_heads(self, columns, text):
