@@ -1,2 +1,0 @@
-2025-07-11 18:52:27,343 - INFO - User a logged out, Time: 2025-07-11 18:52:27, From: global_func
-2025-07-11 19:00:07,919 - INFO - User a logged out, Time: 2025-07-11 19:00:07, From: global_func
