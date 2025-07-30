@@ -7,10 +7,11 @@ import pytz
 import time
 import logging
 import json
+import traceback
 
 #Imported Classses/Functions
 from database import DatabaseManager
-from global_func import export_materials_to_json
+from global_func import export_materials_to_json, export_total_amount_mats
 
 class ProductManagementSystem(tk.Toplevel):
     def __init__(self, parent, controller):
@@ -27,11 +28,13 @@ class ProductManagementSystem(tk.Toplevel):
         
         # Initialize database manager
         self.db_manager = DatabaseManager()
-        
 
-        # Initialize materials list for product creation
+        # Initialize total material usage for order creation
         self.current_materials = []
-        
+
+        # Needs the values to be name:qty
+        self.total_mats_need = []
+
         # Create widgets
         self.create_widgets()
         
@@ -550,6 +553,7 @@ class ProductManagementSystem(tk.Toplevel):
             return {}
 
         materials = {}
+        # Split the string into parts using comma or semicolon
         items = re.split(r'[;,]', materials_string)
 
         for item in items:
@@ -557,15 +561,14 @@ class ProductManagementSystem(tk.Toplevel):
             if not item:
                 continue
 
-            match = re.search(r'(.+?)\s*[-:]\s*([0-9]+)', item)
+            # Match pattern: name - quantity OR name: quantity
+            match = re.match(r'(.+?)\s*[-:]\s*(\d+)', item)
             if match:
                 material_name = match.group(1).strip()
-                try:
-                    quantity = int(match.group(2))
-                    materials[material_name] = quantity
-                except ValueError:
-                    materials[material_name] = 0
+                quantity = int(match.group(2))
+                materials[material_name] = quantity
             else:
+                # Fallback: treat as material with unknown quantity (0)
                 materials[item] = 0
 
         return materials
@@ -573,72 +576,67 @@ class ProductManagementSystem(tk.Toplevel):
 
     def calculate_materials(self):
         """Calculate required materials based on quantity"""
-        selected_product = self.selected_product_var.get().strip()
-        quantity_str = self.order_quantity_var.get().strip()
-
-        if not selected_product or not quantity_str:
-            self.required_materials_text.config(state='normal')
-            self.required_materials_text.delete(1.0, tk.END)
-            self.required_materials_text.insert(1.0, "Please select a product and enter quantity to calculate materials.")
-            self.required_materials_text.config(state='disabled')
-            return
-
         try:
+            selected_product = self.selected_product_var.get().strip()
+            quantity_str = self.order_quantity_var.get().strip()
+
+            # Validation
+            if not selected_product:
+                raise ValueError("Please select a product")
+            if not quantity_str:
+                raise ValueError("Please enter quantity")
+            
             quantity = int(quantity_str)
             if quantity <= 0:
                 raise ValueError("Quantity must be positive")
-        except ValueError:
-            self.required_materials_text.config(state='normal')
-            self.required_materials_text.delete(1.0, tk.END)
-            self.required_materials_text.insert(1.0, "Please enter a valid positive whole number for quantity.")
-            self.required_materials_text.config(state='disabled')
-            return
 
-        try:
-            # Extract product ID from selection
+            # Extract product ID
             product_id = selected_product.split('(')[-1].strip(')')
+            
+            # Get materials data
             materials_string = self.db_manager.get_product_materials(product_id)
+            if not materials_string:
+                raise ValueError("No materials found for this product")
 
-            if materials_string:
+            # Parse materials - ensure this returns a dict {material: quantity}
+            materials_dict = self.parse_materials(materials_string)
+            if not materials_dict:
+                raise ValueError("Materials format not recognized")
+
+            # Calculate totals
+            self.order_materials_data = {}  # This is what create_order will use
+            calculation_text = f"For {quantity} units:\n\n"
+            
+            for material_name, unit_quantity in materials_dict.items():
                 try:
-                    materials_dict = json.loads(materials_string)  # Convert JSON string to dict
-                except json.JSONDecodeError:
-                    self.required_materials_text.config(state='normal')
-                    self.required_materials_text.delete(1.0, tk.END)
-                    self.required_materials_text.insert(1.0, "Materials format is not valid JSON.")
-                    self.required_materials_text.config(state='disabled')
-                    return
+                    unit_qty = float(unit_quantity)  # Handle both int and float quantities
+                    total_needed = unit_qty * quantity
+                    self.order_materials_data[material_name] = total_needed
+                    calculation_text += f"• {material_name}: {total_needed}\n"
+                except (TypeError, ValueError):
+                    calculation_text += f"• {material_name}: (invalid quantity)\n"
 
-                if materials_dict:
-                    calculation_text = f"For {quantity} units:\n\n"
-
-                    for material_name, unit_quantity in materials_dict.items():
-                        if unit_quantity > 0:
-                            total_needed = unit_quantity * quantity
-                            calculation_text += f"• {material_name}: {unit_quantity} × {quantity} = {total_needed}\n"
-                        else:
-                            calculation_text += f"• {material_name}: (quantity not specified)\n"
-
-                    self.required_materials_text.config(state='normal')
-                    self.required_materials_text.delete(1.0, tk.END)
-                    self.required_materials_text.insert(1.0, calculation_text)
-                    self.required_materials_text.config(state='disabled')
-                else:
-                    self.required_materials_text.config(state='normal')
-                    self.required_materials_text.delete(1.0, tk.END)
-                    self.required_materials_text.insert(1.0, "No materials found or materials format not recognized.")
-                    self.required_materials_text.config(state='disabled')
-            else:
-                self.required_materials_text.config(state='normal')
-                self.required_materials_text.delete(1.0, tk.END)
-                self.required_materials_text.insert(1.0, "No materials found for this product.")
-                self.required_materials_text.config(state='disabled')
-
-        except Exception as e:
+            # Update UI
             self.required_materials_text.config(state='normal')
             self.required_materials_text.delete(1.0, tk.END)
-            self.required_materials_text.insert(1.0, f"Error calculating materials: {str(e)}")
+            self.required_materials_text.insert(1.0, calculation_text)
             self.required_materials_text.config(state='disabled')
+
+            print(f"Raw materials from DB: {materials_string}")
+            print(f"After parsing: {self.order_materials_data}")
+
+        except ValueError as e:
+            self._show_materials_error(str(e))
+        except Exception as e:
+            self._show_materials_error(f"Calculation error: {str(e)}")
+            print(f"Error trace: {traceback.format_exc()}")
+
+    def _show_materials_error(self, message):
+        """Helper to display error in materials text widget"""
+        self.required_materials_text.config(state='normal')
+        self.required_materials_text.delete(1.0, tk.END)
+        self.required_materials_text.insert(1.0, message)
+        self.required_materials_text.config(state='disabled')
 
     
     def add_material(self):
@@ -828,28 +826,11 @@ class ProductManagementSystem(tk.Toplevel):
             except Exception as e:
                 messagebox.showerror("Database Error", f"Error updating product: {str(e)}")
         
-        save_btn = tk.Button(button_frame, 
-                            text="💾 Save Changes", 
-                            command=save_changes,
-                            font=('Segoe UI', 11, 'bold'),
-                            bg='#27ae60',
-                            fg='white',
-                            relief='flat',
-                            cursor='hand2',
-                            padx=20,
-                            pady=8)
+        save_btn = tk.Button(button_frame, text="💾 Save Changes", command=save_changes,font=('Segoe UI', 11, 'bold'),bg='#27ae60',fg='white',relief='flat',cursor='hand2',padx=20,pady=8)
         save_btn.pack(side=tk.LEFT, padx=(0, 10))
         
-        cancel_btn = tk.Button(button_frame, 
-                              text="❌ Cancel", 
-                              command=edit_window.destroy,
-                              font=('Segoe UI', 11, 'bold'),
-                              bg='#95a5a6',
-                              fg='white',
-                              relief='flat',
-                              cursor='hand2',
-                              padx=20,
-                              pady=8)
+        cancel_btn = tk.Button(button_frame, text="❌ Cancel", command=edit_window.destroy,font=('Segoe UI', 11, 'bold'),bg='#95a5a6',fg='white',relief='flat',cursor='hand2',
+pady=8)
         cancel_btn.pack(side=tk.LEFT)
     
     def delete_product(self, product_id, product_name):
@@ -1013,7 +994,7 @@ class ProductManagementSystem(tk.Toplevel):
             # Find matching product in JSON
             selected_product = next((p for p in product_list if p['product_id'] == prod_id), None)
             if not selected_product:
-                messagebox.showerror("Error", f"Product ID {prod_id} not found in JSON file.")
+                messagebox.showerror("Error", f"Product ID {prod_id} not found in the database.")
                 return
 
             prod_name = selected_product['product_name']
@@ -1024,6 +1005,7 @@ class ProductManagementSystem(tk.Toplevel):
 
             try:
                 unavailable_mats = []
+                avail_mats_list = []
 
                 for mat_name, mat_qty in selected_product['materials'].items():
                     c.execute("SELECT mat_volume, mat_name FROM raw_mats WHERE mat_name = ?", (mat_name,))
@@ -1032,8 +1014,13 @@ class ProductManagementSystem(tk.Toplevel):
                     if result:
                         current_qty, updated_mat_name = result
                         if current_qty >= mat_qty:
-                            new_qty = current_qty - mat_qty
-                            c.execute("UPDATE raw_mats SET mat_volume = ? WHERE mat_name = ?", (new_qty, updated_mat_name))
+                            avail_mats_list.append(f"{updated_mat_name} (needed: {mat_qty}, available: {current_qty})")
+                            success_mats = (
+                                f"Materials Approve for Product {prod_name} (ID: {prod_id})\n" +
+                                "\n".join(f"= {materials}" for materials in avail_mats_list)
+                            )
+                            messagebox.showinfo("Success", success_mats)
+
                         else:
                             unavailable_mats.append(
                                 f"{updated_mat_name} (needed: {mat_qty}, available: {current_qty})"
@@ -1052,7 +1039,7 @@ class ProductManagementSystem(tk.Toplevel):
                 else:
                     status_approve = 'Approved'
                     c.execute('UPDATE products SET status_quo = ? WHERE product_id = ?', (status_approve, prod_id,))
-                    messagebox.showinfo("Success", f"✅ Approved product {prod_name} (ID: {prod_id}) and deducted materials.")
+                    messagebox.showinfo("Success", f"✅ Approved product {prod_name} (ID: {prod_id}) successfully!")
 
             except Exception as e:
                 messagebox.showerror("Database Error", f"An error occurred: {e}")
@@ -1198,7 +1185,8 @@ class ProductManagementSystem(tk.Toplevel):
             
         except Exception as e:
             messagebox.showerror("Database Error", f"Error loading products and clients: {str(e)}")
-    
+
+
     def create_order(self):
         """Create a new order"""
         order_name = self.order_name_var.get().strip()
@@ -1206,24 +1194,28 @@ class ProductManagementSystem(tk.Toplevel):
         selected_client = self.selected_client_var.get().strip()
         quantity = self.order_quantity_var.get().strip()
         deadline = self.deadline_tab.get().strip()
-        
+
+        # Initialize total material usage for order creation
+        # Needs the values to be name:qty
+        self.order_materials_json = None
+
         # Validation
         if not order_name:
             messagebox.showerror("Error", "Please enter an order name.")
             return
-        
+
         if not selected_product:
             messagebox.showerror("Error", "Please select a product.")
             return
-        
+
         if not selected_client:
             messagebox.showerror("Error", "Please select a client.")
             return
-        
+
         if not quantity:
             messagebox.showerror("Error", "Please enter quantity.")
             return
-        
+
         try:
             quantity_int = int(quantity)
             if quantity_int <= 0:
@@ -1231,41 +1223,54 @@ class ProductManagementSystem(tk.Toplevel):
         except ValueError:
             messagebox.showerror("Error", "Quantity must be a positive whole number.")
             return
-        
+
         if not deadline:
             messagebox.showerror("Error", "Please enter a deadline.")
             return
-        
+
+        # Ensure materials JSON is calculated first and is properly formatted
+        if not hasattr(self, "order_materials_data") or not self.order_materials_data:
+            messagebox.showerror("Error", "Please calculate required materials first.")
+            return
+
         try:
-            # Extract product ID from selection
+            # Convert materials data to proper format if needed
+            materials_json = json.dumps(self.order_materials_data)
+            
+            # Extract IDs
             product_id = selected_product.split('(')[-1].strip(')')
-            
-            # Extract client ID from selection
             client_id = selected_client.split('(')[-1].strip(')')
-            
+
             # Create order
-            order_id = self.db_manager.create_order(order_name, product_id, client_id, quantity_int, deadline)
-            
+            order_id = self.db_manager.create_order(
+                order_name, product_id, client_id, quantity_int, deadline, materials_json)
+
             # Clear form
             self.order_name_var.set("")
             self.selected_product_var.set("")
             self.selected_client_var.set("")
             self.order_quantity_var.set("")
             self.deadline_tab.set("")
-            
+
             # Clear calculation displays
             self.product_materials_text.config(state='normal')
             self.product_materials_text.delete(1.0, tk.END)
             self.product_materials_text.config(state='disabled')
-            
+
             self.required_materials_text.config(state='normal')
             self.required_materials_text.delete(1.0, tk.END)
             self.required_materials_text.config(state='disabled')
-            
+
             messagebox.showinfo("Success", f"Order '{order_name}' created successfully!\nOrder ID: {order_id}")
-                        
+
+        except (TypeError, json.JSONDecodeError) as e:
+            messagebox.showerror("Format Error", f"Invalid materials data format: {str(e)}")
         except Exception as e:
             messagebox.showerror("Database Error", f"Error creating order: {str(e)}")
+        
+        export_total_amount_mats('main.db', 'order_mats_ttl.json')
+
+
     
     def edit_order(self, order_id, order_name, product_id, client_id, quantity, deadline):
         """Edit an existing order"""
@@ -1640,30 +1645,100 @@ class ProductManagementSystem(tk.Toplevel):
             self.edit_order(order_id, order_name, product_id, client_id, quantity, deadline)
             load_orders()  # Refresh the list
 
-        #The Status Quo can only be updated through the Approve, Cancel and Delete Buttons
         def approved_selected_order():
-            "Approval of an order if Materials are available (ordered)"
+            with open('order_mats_ttl.json', 'r') as f:
+                try:
+                    ttl_mats_list = json.load(f)
+                except json.JSONDecodeError:
+                    print("❌ JSON file is empty or invalid.")
+                    ttl_mats_list = []
+
             selection = order_tree.selection()
             if not selection:
-                messagebox.showwarning("No Selection", "Please select an order to delete.")
+                messagebox.showwarning("No Selection", "Please select an order to Approve.")
                 return
 
             item = order_tree.item(selection[0])
             values = item['values']
             order_id = values[0]
 
-
-            status = 'Approved'
-
             conn = self.db_manager.get_connection()
             c = conn.cursor()
 
-            c.execute("UPDATE orders SET status_quo = ? WHERE order_id = ?", (status,  order_id))
+            try:
+                order_info = c.execute("""
+                        SELECT o.order_id, o.status_quo, p.product_id, p.status_quo
+                        FROM orders o
+                        JOIN products p ON o.product_id = p.product_id
+                        WHERE o.order_id = ?
+                    """, (order_id,)).fetchone()
 
-            conn.commit()
-            conn.close()
-            messagebox.showinfo("Success", f"Order '{order_id}' materials have been approved!")
-            load_orders() 
+                if not order_info:
+                    messagebox.showerror(f'Not Found, Order ID: {order_id} cannot be found')
+                    return  
+
+                # Extract order information
+                searched_order_id = order_info[0]
+                order_status = order_info[1]
+                prod_id = order_info[2]
+                prod_status = order_info[3]
+
+                if order_status == "Pending" and prod_status == "Approved":
+                    # Find the corresponding order in the JSON data
+                    selected_order = next((order for order in ttl_mats_list if order['order_id'] == order_id), None)
+                    if not selected_order:
+                        messagebox.showerror('Error', f'Order ID: {order_id} not found in JSON data')
+                        return
+                    
+                    mats_need = selected_order['mats_need']
+
+                    for mat_name, mat_qty_needed in mats_need.items():
+                        mats_fetch = c.execute("""
+                            SELECT mat_id, mat_name, mat_volume
+                            FROM raw_mats WHERE mat_name = ?
+                        """, (mat_name,)).fetchone()
+
+                        if not mats_fetch:
+                            messagebox.showerror(f'No {mat_name} Found.')
+                            continue  
+
+                        # Extract Materials in the Inventory
+                        mat_id, current_qty = mats_fetch[0], mats_fetch[2]
+
+                        if current_qty < mat_qty_needed:
+                            messagebox.showerror(f"Not enough {mat_name} (Need: {mat_qty_needed}, Have: {current_qty})")
+                            continue
+
+                        # Deduct the quantity and update the database
+                        deducted_val = current_qty - mat_qty_needed
+                        c.execute("UPDATE raw_mats SET mat_volume = ? WHERE mat_id = ?", (deducted_val, mat_id))
+
+                    # Update to Approve if materials are deducted Successfully
+                    new_status = "Approved"
+                    c.execute('UPDATE orders SET status_quo = ? WHERE order_id = ?', (new_status, searched_order_id))
+                    messagebox.showinfo(f"Order ID: {searched_order_id} Approved!")
+
+                elif prod_status == "Pending":
+                    messagebox.showinfo(f"Order ID: {searched_order_id}, Product ID {prod_id} Status: {prod_status}")
+                elif prod_status == "Cancelled":
+                    messagebox.showwarning(f"Order ID: {searched_order_id}, Product ID {prod_id} Status: {prod_status}")
+                elif order_status == "Approved":
+                    messagebox.showinfo(f"Order ID: {order_id} has been already approved.")
+                elif order_status == "Cancelled":
+                    if messagebox.askyesno('Order has been cancelled. Do you want to approve?'):
+                        pass
+
+                conn.commit()
+
+            except Exception as e:
+                conn.rollback()
+                messagebox.showerror(f'Database Error: {e}')
+                print(e)
+            finally:
+                conn.close()
+
+            load_orders()
+
 
         def cancel_selected_order():
             selection = order_tree.selection()
