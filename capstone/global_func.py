@@ -132,4 +132,53 @@ def export_materials_to_json(db_path: str, output_file: str) -> None:
     thread.start()
 
 
-export_materials_to_json("main.db", "products_materials.json")
+
+#Create a JSON Decoder for Total Materials Needed  = Finish the New SCHEMA first
+def export_total_amount_mats(db_path: str, output_file: str) -> None:
+    """Exports product materials to JSON in a background thread."""
+
+    def export_thread():
+        try:
+            with sqlite3.connect(db_path) as conn:
+                c = conn.cursor()
+                c.execute("SELECT order_id, order_name, mats_need from orders")
+                rows = c.fetchall()
+
+            export_data = []
+
+            for order_id, order_name, ttl_mats in rows:
+                if ttl_mats:
+                    try:
+                        ttl_mats_dict = json.loads(ttl_mats)
+                    except json.JSONDecodeError:
+                        ttl_mats_dict = {}
+                        for item in re.split(r'[;,]', ttl_mats):
+                            parts = item.strip().split('-')
+                            if len(parts) == 2:
+                                name = parts[0].strip()
+                                try:
+                                    qty = int(parts[1].strip())
+                                    ttl_mats_dict[name] = qty
+                                except ValueError:
+                                    continue
+                        if not ttl_mats_dict:
+                            ttl_mats_dict = {"raw": ttl_mats}
+                else:
+                    ttl_mats_dict = {}
+
+                export_data.append({
+                    'order_id': order_id,
+                    'order_name': order_name,
+                    'mats_need': ttl_mats_dict
+                })
+
+            with open(output_file, 'w') as f:
+                json.dump(export_data, f, indent=4)
+                        
+            logging.info(f"✅ Exported {len(export_data)} products to {output_file}")
+        except Exception as e:
+            logging.error(f"❌ Export failed: {e}")
+
+    # Start the export in a background thread
+    thread = threading.Thread(target=export_thread, daemon=True)
+    thread.start()
