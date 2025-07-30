@@ -4,6 +4,7 @@ class FrameNames:
     CLIENTS = "ClientsPage"
     MAILS = "MessagesPage"
     ORDERS = "OrdersPage"
+    PRODUCTS = "ProductPage"
     INVENTORY = "InventoryPage"
     SUPPLIERS = "SuppliersPage"
     MAIN_MRP = "MainMRP"

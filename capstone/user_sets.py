@@ -37,7 +37,7 @@ class UserSet(tk.Frame):
 
 
         #Txt Logs For Info, Warning, Error
-        logging.basicConfig(filename='settings.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+        logging.basicConfig(filename='D:/capstone/log_f/settings.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
         self.sett_info = logging.getLogger('settings_info')
         self.sett_info.setLevel(logging.INFO)
@@ -50,7 +50,7 @@ class UserSet(tk.Frame):
 
         self.logout_info = logging.getLogger('logout_info')
         self.logout_info.setLevel(logging.INFO)
-        logout_handler = logging.FileHandler('login.log')
+        logout_handler = logging.FileHandler('D:/capstone/log_f/login.log')
         logout_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
         logout_handler.setFormatter(logout_formatter)
         self.logout_info.addHandler(logout_handler)

@@ -700,7 +700,7 @@ class ProductManagementSystem(tk.Toplevel):
             self.load_products_and_clients()
             
             messagebox.showinfo("Success", f"Product '{product_name}' created successfully!\nProduct ID: {product_id}")
-            export_materials_to_json("main.db", "products_materials.json")
+            export_materials_to_json("main.db", "D:/capstone/json_f/products_materials.json")
             
         except Exception as e:
             messagebox.showerror("Database Error", f"Error creating product: {str(e)}")
@@ -979,7 +979,7 @@ pady=8)
         
         def approve_selected_product():
             """Deduct the materials used in a Product from the Inventory Table"""
-            with open('D:/capstone/products_materials.json', 'r') as f:
+            with open('D:/capstone/json_f/products_materials.json', 'r') as f:
                 product_list = json.load(f)
 
             selection = product_tree.selection()
@@ -1268,7 +1268,7 @@ pady=8)
         except Exception as e:
             messagebox.showerror("Database Error", f"Error creating order: {str(e)}")
         
-        export_total_amount_mats('main.db', 'order_mats_ttl.json')
+        export_total_amount_mats('main.db', 'D:/capstone/json_f/order_mats_ttl.json')
 
 
     
@@ -1393,7 +1393,7 @@ pady=8)
 
         edit_deadline_var = tk.StringVar(value=deadline)
         deadline_entry = DateEntry(details_grid, 
-                                textvariable=self.order_deadline_var, 
+                                textvariable=edit_deadline_var, 
                                 font=('Segoe UI', 11),
                                 relief='solid',
                                 bd=2,
@@ -1545,7 +1545,7 @@ pady=8)
         tree_frame.pack(fill='both', expand=True, pady=(0, 20))
         
         # Create Treeview for order display
-        columns = ('ID', 'Name', 'Product', 'Client', 'Quantity', 'Deadline', 'Order Date', 'Status Quo')
+        columns = ('ID', 'Name', 'Product', 'Client', 'Quantity', 'Material Needed', 'Deadline', 'Order Date', 'Status Quo')
         order_tree = ttk.Treeview(tree_frame, columns=columns, show='headings', height=15)
         
         # Configure headings
@@ -1554,6 +1554,7 @@ pady=8)
         order_tree.heading('Product', text='Product')
         order_tree.heading('Client', text='Client')
         order_tree.heading('Quantity', text='Quantity')
+        order_tree.heading('Material Needed', text='Material Needed')
         order_tree.heading('Deadline', text='Deadline')
         order_tree.heading('Order Date', text='Order Date')
         order_tree.heading('Status Quo', text='Status Quo')
@@ -1565,6 +1566,7 @@ pady=8)
         order_tree.column('Product', width=150, minwidth=120)
         order_tree.column('Client', width=150, minwidth=120)
         order_tree.column('Quantity', width=80, minwidth=60)
+        order_tree.column('Material Needed', width=200, minwidth=150)
         order_tree.column('Deadline', width=120, minwidth=100)
         order_tree.column('Order Date', width=120, minwidth=100)
         order_tree.column('Status Quo', width=100, minwidth=80)
@@ -1589,7 +1591,7 @@ pady=8)
                 orders = self.db_manager.get_all_orders()
                 
                 for order in orders:
-                    order_id, name, product_name, client_name, quantity, deadline, order_date, product_id, client_id, status_quo = order
+                    order_id, name, product_name, client_name, quantity, mats_need, deadline, order_date, product_id, client_id, status_quo = order
                     
                     if order_date:
                         try:
@@ -1611,6 +1613,7 @@ pady=8)
                         product_name or 'N/A',
                         client_name or 'N/A',
                         quantity or 'N/A',
+                        mats_need or 'N/A',
                         deadline or 'N/A',
                         formatted_date or 'N/A',
                         status_quo or 'N/A'
@@ -1646,7 +1649,7 @@ pady=8)
             load_orders()  # Refresh the list
 
         def approved_selected_order():
-            with open('order_mats_ttl.json', 'r') as f:
+            with open('D:/capstone/json_f/order_mats_ttl.json', 'r') as f:
                 try:
                     ttl_mats_list = json.load(f)
                 except json.JSONDecodeError:

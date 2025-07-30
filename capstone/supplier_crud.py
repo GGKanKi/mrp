@@ -42,7 +42,7 @@ class SuppliersPage(tk.Frame):
             novus_logo = novus_logo.resize((50, 50))
             self.novus_photo = CTkImage(novus_logo, size=(50, 50))
 
-            logging.basicConfig(filename='actions.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+            logging.basicConfig(filename='D:/capstone/log_f/actions.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
             self.splr_act = logging.getLogger('splr_act')
             self.splr_act.setLevel(logging.INFO)
 

@@ -371,7 +371,7 @@ class InventoryPage(tk.Frame):
                 conn.commit()
                 messagebox.showinfo("Success", "All editable fields updated!")
                 self.load_mats_from_db()
-                c.execute("INSERT INTO user_logs (user_id, action, timestamp) VALUES (?, ?, ?)"
+                c.execute("INSERT INTO user_logs (user_id, action, timestamp) VALUES (?, ?, ?)",
                         (user_id, f"UPDATED ALL FIELDS OF CLIENT {original_id} TO {', '.join(all_values[1:])}", timestamp))
                 conn.commit()
                 top.destroy()

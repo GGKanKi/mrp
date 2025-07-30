@@ -4,6 +4,7 @@ import customtkinter
 from customtkinter import CTkLabel, CTkEntry, CTkButton, CTkFrame, CTkImage, CTkToplevel
 from PIL import Image
 import multiprocessing
+import threading
 import os
 
     
@@ -42,10 +43,11 @@ class NovusApp(tk.Tk):
         self.container.grid_rowconfigure(0, weight=1)
         self.container.grid_columnconfigure(0, weight=1)
         self.frames = {}
-
+    
     def _initialize_frames(self):
         """Lazy import frames to prevent circular imports"""
         from clients_crud import ClientsPage
+        from prod_crud import ProductPage
         from order_crud import OrdersPage
         from inventory_crud import InventoryPage
         from supplier_crud import SuppliersPage
@@ -59,6 +61,7 @@ class NovusApp(tk.Tk):
         frame_classes = {
             FrameNames.CLIENTS: ClientsPage,
             FrameNames.LOGS: LogsPage,
+            FrameNames.PRODUCTS: ProductPage,
             FrameNames.ORDERS: OrdersPage,
             FrameNames.INVENTORY: InventoryPage,
             FrameNames.SUPPLIERS: SuppliersPage,
@@ -70,27 +73,37 @@ class NovusApp(tk.Tk):
             #Add Another Frame For User Settings
         }
 
-        for name, frame_class in frame_classes.items():
-            frame = frame_class(parent=self.container, controller=self)
-            self.frames[name] = frame
-            frame.grid(row=0, column=0, sticky="nsew")
 
-        def multi_process():
-            """Run the main loop in a separate process"""
-            multiprocessing.set_start_method('spawn', force=True)
-            self.mainloop()
+        login_frame = LoginPage(parent=self.container, controller=self)
+        self.frames[FrameNames.LOGIN] = login_frame
+        login_frame.grid(row=0, column=0, sticky="nsew")
+
+        threading.Thread(target=self._load_other_frames, args=(frame_classes,), daemon=True).start()
+        
+        self.show_frame(FrameNames.LOGIN)
+
+    def _load_other_frames(self, frame_classes):
+        """Load other frames in the background"""
+        for frame_name, frame_class in frame_classes.items():
+            if frame_name != FrameNames.LOGIN:
+                frame = frame_class(parent=self.container, controller=self)
+                self.frames[frame_name] = frame
+                frame.grid(row=0, column=0, sticky="nsew")
+        
+        # Show the login frame first
+        self.show_frame(FrameNames.LOGIN)
 
     def show_frame(self, page_name):
         if page_name in self.frames:
             frame = self.frames[page_name]
             frame.tkraise()
             if hasattr(frame, 'on_show'):
-                frame.on_show()  # Optional refresh hook
+                frame.on_show()  
         else:
             available = "\n".join(self.frames.keys())
             messagebox.showerror(
                 "Navigation Error",
-                f"Frame '{page_name}' not found.\n\nAvailable frames:\n{available}"
+                f"Frame '{page_name}'   t found.\n\nAvailable frames:\n{available}"
             )
 
 if __name__ == "__main__":

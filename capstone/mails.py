@@ -23,7 +23,7 @@ class MessagesPage(tk.Frame):
         self.controller = controller
 
         #Logging Info, Errors, 
-        logging.basicConfig(filename='mails.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+        logging.basicConfig(filename='D:/capstone/log_f/mails.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
         self.mail_log = logging.getLogger('MAIL_LOGS')
         self.mail_log.setLevel(logging.INFO)

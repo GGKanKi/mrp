@@ -5,7 +5,7 @@ from tkinter import ttk
 from tkinter import messagebox, filedialog
 import customtkinter
 import customtkinter as ctk
-from customtkinter import CTkLabel, CTkEntry, CTkButton, CTkFrame, CTkImage, CTkToplevel
+from customtkinter import CTkLabel, CTkEntry, CTkButton, CTkFrame, CTkImage
 from PIL import Image
 import sqlite3
 import time
@@ -13,8 +13,6 @@ from datetime import datetime
 import pytz
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
-import uuid
-import bcrypt
 import pandas as pd
 import os
 import logging
@@ -35,7 +33,7 @@ class LoginPage(tk.Frame):
 
         self.login_act = logging.getLogger('LOGIN_ACT')
         self.login_act.setLevel(logging.INFO)
-        act_handler = logging.FileHandler('login.log')
+        act_handler = logging.FileHandler('D:/capstone/log_f/login.log')
         act_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
         act_handler.setFormatter(act_formatter)
         self.login_act.addHandler(act_handler)
@@ -43,14 +41,14 @@ class LoginPage(tk.Frame):
 
         self.login_warning = logging.getLogger('LOGIN_WARNING')
         self.login_warning.setLevel(logging.WARNING)
-        warn_handler = logging.FileHandler('login.log')
+        warn_handler = logging.FileHandler('D:/capstone/log_f/login.log')
         warn_handler.setFormatter(act_formatter)
         self.login_warning.addHandler(warn_handler)
         self.login_warning.propagate = False
 
         self.login_error = logging.getLogger('LOGIN_ERROR')
         self.login_error.setLevel(logging.ERROR)
-        err_handler = logging.FileHandler('login.log')
+        err_handler = logging.FileHandler('D:/capstone/log_f/login.log')
         err_handler.setFormatter(act_formatter)
         self.login_error.addHandler(err_handler)
         self.login_error.propagate = False
@@ -215,9 +213,30 @@ class LoginPage(tk.Frame):
         self.bind("<Return>", lambda event: self.login())
 
         CTkButton(self, text='SIGN UP', font=("futura", 12, 'bold'), width=120, height=30, bg_color='white',
-                  fg_color='blue', corner_radius=10, border_width=2, border_color='black',
-                  command=lambda: self.controller.show_frame(FrameNames.SIGNUP)).place(x=560, y=545)      
+                  fg_color='blue', corner_radius=10, border_width=2, border_color='black', command=self.only_owner_sign).place(x=560, y=545)
         
+    
+    def only_owner_sign(self, title = "Owner Verification"):
+        self.only_owner = tk.Toplevel(self)
+        self.only_owner.title("Owner Sign Up")
+        self.only_owner.geometry("400x300")
+        self.only_owner.grab_set()
+
+        CTkLabel(self.only_owner, text="Owner Verification", font=("Futura", 20, 'bold')).pack(pady=20)
+        CTkLabel(self.only_owner, text="PASSCODE").pack(pady=10)
+        self.passcode_entry = CTkEntry(self.only_owner, show="*", placeholder_text="Enter Passcode", width=200)
+        self.passcode_entry.pack(pady=10)
+
+        conn = sqlite3.connect('main.db')
+        c = conn.cursor()
+        c.execute("SELECT password FROM users WHERE user_id = 'a'")
+        owner_pass = c.fetchone()
+        conn.close()
+
+        CTkButton(self.only_owner, text="Verify", command = lambda: self.controller.show_frame(FrameNames.SIGNUP) if self.passcode_entry.get() == owner_pass[0] else messagebox.showerror("Error", "Incorrect Passcode")
+).pack(pady=20)
+
+
     def login(self):
         username = self.username_entry.get().strip()
         password = self.password_entry.get().strip()
@@ -262,7 +281,6 @@ class LoginPage(tk.Frame):
                     username_db, password_db, confirm_pass, user_type
                 )
 
-                messagebox.showinfo("Success", "Login Successful")
                 self.attempts = 0  # Reset attempts on success
                 self.username_entry.delete(0, tk.END)
                 self.password_entry.delete(0, tk.END)

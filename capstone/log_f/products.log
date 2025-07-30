@@ -1,0 +1,30 @@
+2025-07-21 23:58:14,349 - INFO - Order ORDER_6SAFRB8M created. Time: 2025-07-21 23:57:32
+2025-07-22 00:18:10,434 - INFO - User a logged out, Time: 2025-07-22 00:18:10
+2025-07-22 00:25:13,915 - INFO - User a logged out, Time: 2025-07-22 00:25:13
+2025-07-22 02:36:09,618 - INFO - Client details viewed for ID: SuicideBoys, Time: 2025-07-22 02:36:09
+2025-07-22 02:36:09,691 - INFO - Client details viewed for ID: SuicideBoys, Time: 2025-07-22 02:36:09
+2025-07-22 02:36:11,778 - INFO - Client details viewed for ID: a, Time: 2025-07-22 02:36:11
+2025-07-22 02:36:35,568 - INFO - User a logged out, Time: 2025-07-22 02:36:35, From: user_sets
+2025-07-23 02:47:03,299 - INFO - Product PROD_DJ5O6SON created succesfully, Time: 2025-07-23 02:43:55
+2025-07-23 03:25:30,367 - INFO - Order ORDER_9Z147EWZ created. Time: 2025-07-23 03:21:42
+2025-07-25 03:11:42,020 - INFO - Order ORDER_9Z147EWZ updated. Time: 2025-07-25 03:10:57
+2025-07-25 04:01:37,556 - INFO - Order ORDER_6SH4BUM9 created. Time: 2025-07-25 04:00:56
+2025-07-25 04:02:45,146 - INFO - Order ORDER_A4XVSWOR created. Time: 2025-07-25 04:02:19
+2025-07-25 04:03:07,081 - INFO - Order ORDER_6SH4BUM9 deleted from Database, Time: 2025-07-25 04:02:19
+2025-07-25 23:39:36,151 - INFO - Product PROD_PUQJWNGJ created succesfully, Time: 2025-07-25 23:38:51
+2025-07-25 23:44:17,538 - INFO - Product PROD_DAI9ARND created succesfully, Time: 2025-07-25 23:43:47
+2025-07-25 23:49:55,739 - INFO - Product PROD_AOHS0D4J created succesfully, Time: 2025-07-25 23:49:39
+2025-07-26 00:04:25,064 - INFO - Product PROD_RU2H8HVH created succesfully, Time: 2025-07-26 00:03:57
+2025-07-26 00:06:42,004 - INFO - Product PROD_U4X23ERN created succesfully, Time: 2025-07-26 00:06:19
+2025-07-26 00:08:26,243 - INFO - Product PROD_C3TKP2S8 created succesfully, Time: 2025-07-26 00:06:19
+2025-07-29 01:57:31,749 - INFO - \u2705 Exported 3 products to products_materials.json
+2025-07-29 23:59:54,075 - INFO - Order ORD-20250729235954-4DW3 created successfully
+2025-07-29 23:59:55,125 - ERROR - \u274c Export failed: no such column: order_id
+2025-07-30 00:08:26,539 - INFO - Order ORD-20250730000826-E06D created successfully
+2025-07-30 00:08:27,307 - ERROR - \u274c Export failed: no such column: order_id
+2025-07-30 00:12:09,259 - INFO - Order ORD-20250730001209-VR9K created successfully
+2025-07-30 00:12:10,117 - INFO - \u2705 Exported 5 products to order_mats_ttl.json
+2025-07-30 01:11:08,581 - INFO - Order ORD-20250730011108-VQC1 created successfully
+2025-07-30 01:11:09,655 - INFO - \u2705 Exported 6 products to order_mats_ttl.json
+2025-07-30 02:34:46,400 - INFO - Order ORD-20250730023446-AV5B created successfully
+2025-07-30 02:34:47,301 - INFO - \u2705 Exported 7 products to order_mats_ttl.json

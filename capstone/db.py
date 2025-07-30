@@ -103,29 +103,27 @@ c.execute("""
             ON UPDATE CASCADE
     )
 """)
-
+'''
+'''
 # Orders Table
 c.execute("""
     CREATE TABLE IF NOT EXISTS orders (
         order_id TEXT PRIMARY KEY,
-        order_name TEXT,
-        product_id TEXT,
-        order_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-        order_dl TEXT,
-        order_amount REAL,
+        order_name TEXT NOT NULL,
+        product_id TEXT NOT NULL,
         client_id TEXT NOT NULL,
+        quantity INTEGER NOT NULL,
+        deadline TEXT NOT NULL,
+        order_date TEXT NOT NULL,
+        mats_need TEXT,
         status_quo TEXT DEFAULT 'Pending',
-        FOREIGN KEY (product_id) REFERENCES products(product_id)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE,
+        FOREIGN KEY (product_id) REFERENCES products(product_id),
         FOREIGN KEY (client_id) REFERENCES clients(client_id)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE
     )
 """)
 
-
-
+c.execute("CREATE INDEX IF NOT EXISTS idx_orders_product ON orders(product_id)")
+c.execute("CREATE INDEX IF NOT EXISTS idx_orders_client ON orders(client_id)")
 
 # Commit changes and close the connection
 conn.commit()

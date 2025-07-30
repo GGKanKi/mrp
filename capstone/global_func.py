@@ -54,7 +54,7 @@ def handle_logout(self):
     self.logout_info.setLevel(logging.INFO)
 
     if not self.logout_info.handlers:
-        logout_handler = logging.FileHandler('login.log')
+        logout_handler = logging.FileHandler('D:/capstone/log_f/login.log')
         logout_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
         logout_handler.setFormatter(logout_formatter)
         self.logout_info.addHandler(logout_handler)
@@ -182,3 +182,12 @@ def export_total_amount_mats(db_path: str, output_file: str) -> None:
     # Start the export in a background thread
     thread = threading.Thread(target=export_thread, daemon=True)
     thread.start()
+
+
+
+
+
+
+    
+
+

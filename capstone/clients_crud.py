@@ -30,7 +30,7 @@ class ClientsPage(tk.Frame):
         parent.pack_propagate(False)
 
         #Logger Files
-        logging.basicConfig(filename='actions.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+        logging.basicConfig(filename='D:/capstone/log_f/actions.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
         self.client_act = logging.getLogger('CLIENT_ACT')
         self.client_act.setLevel(logging.INFO)

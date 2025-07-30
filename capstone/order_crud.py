@@ -85,7 +85,7 @@ class OrdersPage(tk.Frame):
             self.order_tree = ttk.Treeview(        
             tree_frame,
                 columns=('order_id', 'order_name', 'product_id', 'order_date', 
-                        'order_dl', 'order_amount', 'client_id', 'status_quo'),
+                        'order_dl', 'order_amount', 'mats_need','client_id', 'status_quo'),
                 show='headings',
                 style='Treeview'
             )
@@ -99,6 +99,7 @@ class OrdersPage(tk.Frame):
             self._column_heads('order_date', 'ORDER DATE')
             self._column_heads('order_dl', 'DEADLINE')
             self._column_heads('order_amount', 'VOLUME')
+            self._column_heads('mats_need', 'TOTAL MATERIALS')
             self._column_heads('client_id', 'CLIENT ID')
             self._column_heads('status_quo', 'STATUS')
 
@@ -152,6 +153,7 @@ class OrdersPage(tk.Frame):
         self.inventory_window = ProductManagementSystem(self, self.controller)
 
     #Checking the product status before verifying the order
+    #Redo with calculation 3 tables connected
     def approve_order(self):
         selected = self.order_tree.focus()
         if not selected:
@@ -187,7 +189,7 @@ class OrdersPage(tk.Frame):
                 if order_stat == 'Pending':
                     if product_stat == 'Approved':
                         new_status = 'Approved'
-                        c.execute('UPDATE orders SET status_quo = ? where order_id = ?', (new_status, join_order_id))
+                        c.execute('UPDATE orders SET status_quo = ? WHERE order_id = ?', (new_status, join_order_id))
                     elif product_stat == 'Pending' or product_stat == 'Cancelled':
                         messagebox.showwarning("Pending Product", f"Product ID '{product_id}' is not approved yet.")
                         return
