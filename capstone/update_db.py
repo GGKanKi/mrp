@@ -1,0 +1,269 @@
+import sqlite3
+from datetime import datetime
+
+def create_database():
+    # Connect to the database with URI for additional options
+    conn = sqlite3.connect('file:main.db?mode=rwc', uri=True)
+    c = conn.cursor()
+    
+    # Enable advanced features
+    c.execute("PRAGMA foreign_keys = ON;")
+    c.execute("PRAGMA journal_mode = WAL;")  # Better concurrency
+    c.execute("PRAGMA synchronous = NORMAL;")  # Good balance of safety/performance
+    
+    # Clients Table (enhanced)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS clients (
+            client_id TEXT PRIMARY KEY,
+            client_name TEXT NOT NULL,
+            client_email TEXT UNIQUE CHECK(client_email LIKE '%@%.%'),
+            client_address TEXT,
+            client_contactnum TEXT CHECK(LENGTH(client_contactnum) >= 10),
+            date_created DATETIME DEFAULT CURRENT_TIMESTAMP,
+            last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
+            is_active INTEGER DEFAULT 1 CHECK(is_active IN (0, 1)),
+            notes TEXT
+        )
+    """)
+    
+    # Users Table (enhanced with security)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            user_id TEXT PRIMARY KEY,
+            f_name TEXT NOT NULL,
+            l_name TEXT NOT NULL,
+            m_name TEXT,
+            useremail TEXT UNIQUE NOT NULL CHECK(useremail LIKE '%@%.%'),
+            phonenum TEXT CHECK(LENGTH(phonenum) >= 10),
+            username TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL, 
+            salt TEXT NOT NULL,  
+            usertype TEXT NOT NULL CHECK(usertype IN ('admin', 'manager', 'staff', 'supplier')),
+            userimage BLOB,
+            last_login DATETIME,
+            failed_login_attempts INTEGER DEFAULT 0,
+            account_locked INTEGER DEFAULT 0 CHECK(account_locked IN (0, 1)),
+            date_created DATETIME DEFAULT CURRENT_TIMESTAMP,
+            last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
+            reset_token TEXT,
+            reset_token_expiry DATETIME
+        )
+    """)
+
+    # Messages Table (enhanced)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS messages (
+            message_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            sender_id TEXT NOT NULL,
+            receiver_id TEXT NOT NULL,
+            subject TEXT NOT NULL,
+            body TEXT NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            is_read INTEGER DEFAULT 0 CHECK(is_read IN (0, 1)),
+            is_archived INTEGER DEFAULT 0 CHECK(is_archived IN (0, 1)),
+            priority INTEGER DEFAULT 2 CHECK(priority BETWEEN 1 AND 3), 
+            FOREIGN KEY (sender_id) REFERENCES users(user_id) ON DELETE CASCADE,
+            FOREIGN KEY (receiver_id) REFERENCES users(user_id) ON DELETE CASCADE
+        )
+    """)
+    
+    # Message Attachments Table (new)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS message_attachments (
+            attachment_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            message_id INTEGER NOT NULL,
+            file_name TEXT NOT NULL,
+            file_type TEXT NOT NULL,
+            file_size INTEGER NOT NULL,
+            file_data BLOB NOT NULL,
+            FOREIGN KEY (message_id) REFERENCES messages(message_id) ON DELETE CASCADE
+        )
+    """)
+
+    # User Activity Logs Table (enhanced)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS user_logs (
+            log_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            action TEXT NOT NULL,
+            details TEXT,
+            ip_address TEXT,
+            user_agent TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+        )
+    """)
+    
+    # Create index for faster log lookups
+    c.execute("CREATE INDEX IF NOT EXISTS idx_user_logs_user_id ON user_logs(user_id);")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_user_logs_timestamp ON user_logs(timestamp);")
+
+    # Suppliers Table (enhanced)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS suppliers (
+            supplier_id TEXT PRIMARY KEY,
+            supplier_name TEXT NOT NULL,
+            supplier_add TEXT NOT NULL,
+            supplier_num TEXT NOT NULL CHECK(LENGTH(supplier_num) >= 10),
+            supplier_mail TEXT NOT NULL CHECK(supplier_mail LIKE '%@%.%'),
+            contact_person TEXT,
+            tax_id TEXT,
+            rating INTEGER CHECK(rating BETWEEN 1 AND 5),
+            is_active INTEGER DEFAULT 1 CHECK(is_active IN (0, 1)),
+            delivered_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+            date_created DATETIME DEFAULT CURRENT_TIMESTAMP,
+            last_updated DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    # Products Table (enhanced)
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS products(
+            product_id TEXT PRIMARY KEY,
+            product_name TEXT NOT NULL UNIQUE,
+            description TEXT,
+            materials TEXT NOT NULL,
+            unit_price REAL NOT NULL CHECK(unit_price > 0),
+            current_stock INTEGER DEFAULT 0 CHECK(current_stock >= 0),
+            min_stock_level INTEGER DEFAULT 10 CHECK(min_stock_level >= 0),
+            created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+            last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
+            is_active INTEGER DEFAULT 1 CHECK(is_active IN (0, 1))
+        )
+    ''')
+
+    # Raw Materials Table (enhanced)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS raw_mats (
+            mat_id TEXT PRIMARY KEY,
+            mat_name TEXT UNIQUE NOT NULL,
+            mat_description TEXT,
+            mat_volume INTEGER NOT NULL CHECK(mat_volume >= 0),
+            current_stock INTEGER NOT NULL CHECK(current_stock >= 0),
+            unit_of_measure TEXT NOT NULL DEFAULT 'units',
+            unit_cost REAL NOT NULL CHECK(unit_cost >= 0),
+            min_stock_level INTEGER DEFAULT 50 CHECK(min_stock_level >= 0),
+            mat_order_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+            supplier_id TEXT NOT NULL,
+            last_restocked DATETIME,
+            shelf_life_days INTEGER,
+            FOREIGN KEY (supplier_id) REFERENCES suppliers(supplier_id) ON DELETE RESTRICT
+        )
+    """)
+
+    # Orders Table (enhanced)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS orders (
+            order_id TEXT PRIMARY KEY,
+            order_name TEXT NOT NULL,
+            product_id TEXT NOT NULL,
+            order_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+            order_dl DATETIME NOT NULL,
+            order_amount REAL NOT NULL CHECK(order_amount > 0),
+            quantity INTEGER NOT NULL CHECK(quantity > 0),
+            status TEXT NOT NULL CHECK(status IN ('pending', 'processing', 'shipped', 'delivered', 'cancelled')),
+            payment_status TEXT NOT NULL CHECK(payment_status IN ('unpaid', 'partial', 'paid')),
+            mats_used TEXT,
+            client_id TEXT NOT NULL,
+            assigned_to TEXT,
+            notes TEXT,
+            FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE RESTRICT,
+            FOREIGN KEY (client_id) REFERENCES clients(client_id) ON DELETE RESTRICT,
+            FOREIGN KEY (assigned_to) REFERENCES users(user_id) ON DELETE SET NULL
+        )
+    """)
+    
+    # Order History/Status Changes Table (new)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS order_history (
+            history_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            order_id TEXT NOT NULL,
+            status TEXT NOT NULL,
+            changed_by TEXT NOT NULL,
+            notes TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
+            FOREIGN KEY (changed_by) REFERENCES users(user_id)
+        )
+    """)
+    
+    # Inventory Transactions Table (new)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS inventory_transactions (
+            transaction_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            mat_id TEXT,
+            product_id TEXT,
+            quantity INTEGER NOT NULL,
+            transaction_type TEXT NOT NULL CHECK(transaction_type IN ('purchase', 'sale', 'adjustment', 'transfer', 'waste')),
+            reference_id TEXT, 
+            notes TEXT,
+            performed_by TEXT NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (mat_id) REFERENCES raw_mats(mat_id) ON DELETE SET NULL,
+            FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE SET NULL,
+            FOREIGN KEY (performed_by) REFERENCES users(user_id)
+        )
+    """)
+    
+    # Notifications Table (new)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS notifications (
+            notification_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            title TEXT NOT NULL,
+            message TEXT NOT NULL,
+            is_read INTEGER DEFAULT 0 CHECK(is_read IN (0, 1)),
+            notification_type TEXT NOT NULL,
+            related_id TEXT,  
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+        )
+    """)
+
+    # Create indexes for better performance
+    c.execute("CREATE INDEX IF NOT EXISTS idx_orders_client_id ON orders(client_id);")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status_quo);")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_raw_mats_supplier_id ON raw_mats(supplier_id);")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_messages_receiver_id ON messages(receiver_id);")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);")
+
+    # Create triggers for automatic updates
+    c.execute("""
+        CREATE TRIGGER IF NOT EXISTS update_client_timestamp
+        AFTER UPDATE ON clients
+        FOR EACH ROW
+        BEGIN
+            UPDATE clients SET last_updated = CURRENT_TIMESTAMP WHERE client_id = OLD.client_id;
+        END;
+    """)
+    
+    c.execute("""
+        CREATE TRIGGER IF NOT EXISTS update_user_timestamp
+        AFTER UPDATE ON users
+        FOR EACH ROW
+        BEGIN
+            UPDATE users SET last_updated = CURRENT_TIMESTAMP WHERE user_id = OLD.user_id;
+        END;
+    """)
+
+    # Insert initial admin user if not exists
+    try:
+        c.execute("""
+            INSERT INTO users (
+                user_id, f_name, l_name, useremail, username, 
+                password_hash, salt, usertype
+            ) 
+            SELECT 
+                'admin001', 'System', 'Admin', 'admin@example.com', 'admin',
+                'hashed_password_placeholder', 'salt_placeholder', 'admin'
+            WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'admin')
+        """)
+    except sqlite3.IntegrityError:
+        pass  
+    # Admin already exists
+
+    conn.commit()
+    conn.close()
+
+if __name__ == "__main__":
+    create_database()
