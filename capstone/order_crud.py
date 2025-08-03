@@ -11,10 +11,11 @@ import sqlite3
 import time
 from datetime import datetime
 import pytz
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
-import uuid
-import bcrypt
+import threading
+import traceback
 
 
 #Data Imports
@@ -27,7 +28,7 @@ sys.path.append("D:/capstone")
 #File imports
 from product import ProductManagementSystem
 from pages_handler import FrameNames
-from global_func import on_show, handle_logout
+from global_func import on_show, handle_logout, export_total_amount_mats
 
 
 class OrdersPage(tk.Frame):
@@ -155,61 +156,103 @@ class OrdersPage(tk.Frame):
     #Checking the product status before verifying the order
     #Redo with calculation 3 tables connected
     def approve_order(self):
+        try:
+            with open('D:/capstone/json_f/order_mats_ttl.json', 'r') as f:
+                try:
+                    ttl_mats_list = json.load(f)
+                except json.JSONDecodeError:
+                    print("❌ JSON file is empty or invalid.")
+                    ttl_mats_list = []
+        except FileNotFoundError:
+            messagebox.showerror("File Error", "Could not find 'order_mats_ttl.json'.")
+            return
+
         selected = self.order_tree.focus()
         if not selected:
-            messagebox.showwarning("No selection", "Please select an order to approve.")
+            messagebox.showwarning("No Selection", "Please select an order to approve.")
             return
-        
+
         values = self.order_tree.item(selected, 'values')
         order_id = values[0]
 
-
-        conn = sqlite3.connect('main.db')
-        c = conn.cursor()
-
+        conn = None
         try:
-            c.execute("""
-                        SELECT o.order_id, o.status_quo, p.product_id, p.status_quo
-                        FROM orders o
-                        JOIN products p ON o.product_id = p.product_id where o.order_id = ?
-                        """, (order_id,))
+            conn = sqlite3.connect('main.db')
+            c = conn.cursor()
+            order_info = c.execute("""
+                SELECT o.order_id, o.status_quo, p.product_id, p.status_quo
+                FROM orders o
+                JOIN products p ON o.product_id = p.product_id
+                WHERE o.order_id = ?
+            """, (order_id,)).fetchone()
 
-
-            row = c.fetchone()
-
-            if not row:
-                messagebox.showinfo("Not Found", f"No orders found with ID '{order_id}'")
+            if not order_info:
+                messagebox.showerror("Not Found", f"Order ID: {order_id} cannot be found")
                 return
-            else:
-                join_order_id = order_id
-                order_stat = row[1]
-                product_id = row[2]
-                product_stat = row[3]
 
-                if order_stat == 'Pending':
-                    if product_stat == 'Approved':
-                        new_status = 'Approved'
-                        c.execute('UPDATE orders SET status_quo = ? WHERE order_id = ?', (new_status, join_order_id))
-                    elif product_stat == 'Pending' or product_stat == 'Cancelled':
-                        messagebox.showwarning("Pending Product", f"Product ID '{product_id}' is not approved yet.")
-                        return
-                elif order_stat == 'Approved':
-                    messagebox.showinfo("Already Approved", f"Order ID '{join_order_id}' is already approved.")
-                    return
-                elif order_stat == 'Cancelled':
-                    messagebox.askyesno("Cancelled Order", f"Order ID '{join_order_id}' has been cancelled. Do you want to approve it again?")
-                    new_status = 'Approved'
-                    c.execute('UPDATE orders SET status_quo = ? where order_id = ?', (new_status, join_order_id))
-                else:
+            searched_order_id, order_status, prod_id, prod_status = order_info[0],  order_info[1], order_info[2], order_info[3]
+
+            if order_status == "Pending" and prod_status == "Approved":
+                selected_order = next((order for order in ttl_mats_list if order['order_id'] == order_id), None)
+                if not selected_order:
+                    messagebox.showerror('Error', f'Order ID: {order_id} not found in JSON data')
                     return
 
-        except sqlite3.Error as e:
-            messagebox.showerror("Database Error", str(e))
-    
-        conn.commit()
-        conn.close()
-        
-        self.load_orders_from_db()
+                mats_need = selected_order['mats_need']
+
+                for mat_name, mat_qty_needed in mats_need.items():
+                    mats_fetch = c.execute("""
+                        SELECT mat_id, mat_name, mat_volume
+                        FROM raw_mats WHERE mat_name = ?
+                    """, (mat_name,)).fetchone()
+
+                    if not mats_fetch:
+                        messagebox.showerror("Material Not Found", f'No {mat_name} Found.')
+                        continue
+
+                    mat_id, _, current_qty = mats_fetch
+
+                    if current_qty < mat_qty_needed:
+                        messagebox.showerror("Insufficient Material", f"Not enough {mat_name} (Need: {mat_qty_needed}, Have: {current_qty})")
+                        continue
+
+                    deducted_val = current_qty - mat_qty_needed
+                    c.execute("UPDATE raw_mats SET mat_volume = ? WHERE mat_id = ?", (deducted_val, mat_id))
+
+                new_status = "Approved"
+                c.execute('UPDATE orders SET status_quo = ? WHERE order_id = ?', (new_status, searched_order_id))
+                messagebox.showinfo("Success", f"Order ID: {searched_order_id} Approved!")
+
+            elif prod_status == "Pending":
+                messagebox.showinfo("Pending Product", f"Order ID: {searched_order_id}, Product ID {prod_id} Status: {prod_status}")
+            elif prod_status == "Cancelled":
+                messagebox.showwarning("Cancelled Product", f"Order ID: {searched_order_id}, Product ID {prod_id} Status: {prod_status}")
+            elif order_status == "Approved":
+                messagebox.showinfo("Already Approved", f"Order ID: {order_id} has been already approved.")
+            elif order_status == "Cancelled":
+                if messagebox.askyesno('Order Cancelled', 'Order has been cancelled. Do you want to approve?'):
+                    pass
+
+            conn.commit()
+
+        except Exception as e:
+            if conn:
+                try:
+                    conn.rollback()
+                except Exception:
+                    pass
+            messagebox.showerror("Database Error", f"{e}")
+            print(e)
+        finally:
+            if conn:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+            try:
+                self.load_orders_from_db()
+            except Exception as e:
+                print("Error reloading orders:", e)
 
 
     def cancel_order(self):
@@ -378,7 +421,7 @@ class OrdersPage(tk.Frame):
         if not selected:
             return
         values = self.order_tree.item(selected, 'values')
-        mats_used = values[6]  # Assuming 'mats_used' is the 7th column
+        mats_used = values[7] 
         popup = tk.Toplevel(self)
         popup.title("Materials Used")
         popup.geometry("400x300")
@@ -390,6 +433,7 @@ class OrdersPage(tk.Frame):
     def add_del_upd(self, text, fg_color, command):
         button = CTkButton(self, text=text, fg_color=fg_color, width=80, command=command)
         button.pack(side="left", anchor="n", padx=5)
+        return button
 
     def _column_heads(self, columns, text):
         self.order_tree.heading(columns, text=text)
@@ -415,7 +459,6 @@ class OrdersPage(tk.Frame):
         entry.pack(pady=(0, 10))
         return entry
     
-
     def on_show(self):
         on_show(self)  # Calls the shared sidebar logic
 
