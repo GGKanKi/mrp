@@ -57,11 +57,11 @@ class InventoryPage(tk.Frame):
             self.search_entry = ctk.CTkEntry(self, placeholder_text="Search...")
             self.search_entry.pack(side="left",anchor="n", padx=(15, 20), ipadx=150)
 
-            self.srch_btn = self.add_del_upd('SEARCH', command=self.srch_mats)
-            self.add_btn = self.add_del_upd('ADD MATERIAL', command=self.add_mats)
-            self.del_btn = self.add_del_upd('DELETE MATERIAL', command=self.del_mats)
-            self.update_btn = self.add_del_upd('UPDATE MATERIAL', command=self.upd_mats)
-            self.check_orders = self.add_del_upd('CHECK MATERIAL', command=self.order_to_supplier)
+            self.srch_btn = self.add_del_upd('SEARCH', '#5dade2', command=self.srch_mats)
+            self.add_btn = self.add_del_upd('ADD MATERIAL', '#2ecc71', command=self.add_mats)
+            self.del_btn = self.add_del_upd('DELETE MATERIAL', '#e74c3c', command=self.del_mats)
+            self.update_btn = self.add_del_upd('UPDATE MATERIAL', '#f39c12', command=self.upd_mats)
+            self.check_orders = self.add_del_upd('CHECK MATERIAL', '#95a5a6', command=self.order_to_supplier)
 
             # Treeview style
             style = ttk.Style(self)
@@ -75,6 +75,7 @@ class InventoryPage(tk.Frame):
 
             self.inventory_tree = ttk.Treeview(        
             tree_frame, columns=('mat_id', 'mat_name', 'mat_volume', 'mat_order_date', 'supplier_id'), show='headings', style='Treeview')
+            self.inventory_tree.bind("<Double-1>", self.mats_history)
             self._column_heads('mat_id', 'MATERIAL ID')
             self._column_heads('mat_name', 'MATERIAL NAME')
             self._column_heads('mat_volume', 'MATERIAL VOLUME')
@@ -103,8 +104,8 @@ class InventoryPage(tk.Frame):
         self.inventory_tree.heading(columns, text=text)
         self.inventory_tree.column(columns, width=195)
 
-    def add_del_upd(self, text, command):
-        button = CTkButton(self, text=text, width=73, command=command)
+    def add_del_upd(self, text, fg_color, command):
+        button = CTkButton(self, text=text, width=73, fg_color=fg_color, command=command)
         button.pack(side="left", anchor="n", padx=4)
 
     def _add_mat(self, label_text, y):
@@ -406,6 +407,61 @@ class InventoryPage(tk.Frame):
         except sqlite3.Error as e:
             messagebox.showerror('Wrong Supplier')
             self.load_mats_from_db()
+
+    def mats_history(self, event):
+
+        selected = self.inventory_tree.focus()
+
+        if not selected:
+            messagebox.showwarning("No selection", "Please select a material to view history.")
+            return
+        
+        values = self.inventory_tree.item(selected, 'values')
+        mat_id = values[0]
+        mat_splr = values[4]
+
+        try:
+
+            conn = sqlite3.connect('main.db')
+            c = conn.cursor()
+
+            mat_info = c.execute("""
+                SELECT rm.mat_id, rm.mat_name, rm.mat_volume, s.supplier_id
+                FROM raw_mats rm
+                JOIN suppliers s ON rm.supplier_id = s.supplier_id
+                WHERE rm.mat_id = ? AND s.supplier_id = ?
+            """, (mat_id, mat_splr)).fetchall()
+
+
+
+            if not mat_info:
+                messagebox.showerror('Error', f"No Material found with ID: {mat_id} and Supplier ID: {mat_splr}")
+                return
+            else:
+                print('Supplier Info:', mat_info)
+
+                mat_desc += "\n".join(f"Material ID: {row[0]}, Material Name: {row[1]}, Current Volume: {row[2]}, Ordered From: {row[3]}" for row in mat_info)
+
+                popup = tk.Toplevel(self)
+                popup.title(f"Material History: {mat_id}")
+                popup.geometry("600x400")
+
+                txt = tk.Text(popup, wrap="word", state="normal")
+                txt.insert('1.0', mat_desc)
+                txt.config(state='disabled')
+                txt.pack(expand=True, fill='both', padx=10, pady=10)
+
+        except sqlite3.Error as e:
+            messagebox.showerror('Database Error', str(e))
+            return
+        except Exception as e:
+            messagebox.showerror('Error', str(e))
+            return
+        finally:
+            conn.close()
+
+            
+
 
     def _main_buttons(self, parent, image, text, command):
         button = CTkButton(parent, image=image, text=text, bg_color="#6a9bc3", fg_color="#6a9bc3", hover_color="white",
