@@ -67,10 +67,10 @@ class SuppliersPage(tk.Frame):
             self.search_entry = ctk.CTkEntry(self, placeholder_text="Search...")
             self.search_entry.pack(side="left", anchor="n", padx=(15, 20), ipadx=150)
 
-            self.srch_btn = self.add_del_upd('SEARCH', command=self.srch_splr)
-            self.add_btn = self.add_del_upd('ADD', command=self.add_splr)
-            self.del_btn = self.add_del_upd('DELETE', command=self.del_splr)
-            self.update_btn = self.add_del_upd('UPDATE', command=self.upd_splr)
+            self.srch_btn = self.add_del_upd('SEARCH','#5dade2', command=self.srch_splr)
+            self.add_btn = self.add_del_upd('ADD', '#2ecc71', command=self.add_splr)
+            self.del_btn = self.add_del_upd('DELETE', '#e74c3c', command=self.del_splr)
+            self.update_btn = self.add_del_upd('UPDATE','#f39c12', command=self.upd_splr)
 
 
             # Treeview style
@@ -93,6 +93,8 @@ class SuppliersPage(tk.Frame):
                 show='headings',
                 style='Treeview'
             )
+            self.supplier_tree.bind("<Double-1>", self.splr_history)
+
 
             self._column_heads('supplier_id', 'SUPPLIER ID')
             self._column_heads('supplier_add', 'ADDRESS')
@@ -403,6 +405,58 @@ class SuppliersPage(tk.Frame):
         finally:
             conn.close() 
 
+    def splr_history(self, event):
+        selected = self.supplier_tree.focus()
+
+        if not selected:
+            messagebox.showwarning("No selection", "Please select a supplier to view history.")
+            return
+        
+        values = self.supplier_tree.item(selected, 'values')
+        supplier_id = values[0] 
+
+        print("Selected item:", selected)
+        print("Supplier ID:", supplier_id)
+
+        try:
+            conn = sqlite3.connect('main.db')
+            c = conn.cursor()
+
+            splr_info = c.execute("""
+                SELECT rm.mat_id, rm.mat_name, rm.mat_order_date
+                FROM raw_mats rm
+                JOIN suppliers s on rm.supplier_id = s.supplier_id
+                WHERE s.supplier_id = ?
+            """, (supplier_id,)).fetchall()
+
+            print("Supplier Info:", splr_info)
+
+            if not splr_info:
+                messagebox.showinfo("No History", f"No history found for supplier ID '{supplier_id}'")
+                return
+            
+            splr_desc = f"Supplier ID: {supplier_id}\n\nSupplier History:\n"
+            splr_desc += "\n".join(f"Material ID: {row[0]}, Material Name: {row[1]}, Order Date: {row[2]}" for row in splr_info)
+
+            popup = tk.Toplevel(self)
+            popup.title(f"Supplier History - {supplier_id}")
+            popup.geometry("600x400")  
+            txt = tk.Text(popup, wrap="word", state="normal")
+            txt.insert('1.0', splr_desc)
+            txt.config(state='disabled')
+            txt.pack(expand=True, fill='both', padx=10, pady=10)
+
+        except sqlite3.Error as e:
+            messagebox.showerror("Database Error", str(e))
+            return
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+            return
+        finally:
+            conn.close()
+
+
+
     def _images_buttons(self, image_path, size=(40, 40)):
         image = Image.open(image_path)
         size = size
@@ -413,8 +467,8 @@ class SuppliersPage(tk.Frame):
         width=100, border_color="white", corner_radius=10, border_width=2, command=command, anchor='center')
         button.pack(side="top", padx=5, pady=15)
 
-    def add_del_upd(self, text, command):
-        button = CTkButton(self, text=text, width=80, command=command)
+    def add_del_upd(self, text, fg_color, command):
+        button = CTkButton(self, text=text, width=80, fg_color=fg_color, command=command)
         button.pack(side="left", anchor="n", padx=5)
         
     def _column_heads(self, columns, text):
