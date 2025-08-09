@@ -14,8 +14,7 @@ import pytz
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
-import threading
-import traceback
+import logging
 
 
 #Data Imports
@@ -48,6 +47,9 @@ class OrdersPage(tk.Frame):
             novus_logo = novus_logo.resize((50, 50))
             self.novus_photo = CTkImage(novus_logo, size=(50, 50))
 
+            logging.basicConfig(filename='D:/capstone/log_f/actions.log', level=logging.INFO,
+                                format='%(asctime)s - %(levelname)s - %(message)s')
+
             #Buttons Images
             self.clients_btn = self._images_buttons('D:/capstone/labels/client_btn.png', size=(100,100))
             self.inv_btn = self._images_buttons('D:/capstone/labels/inventory.png', size=(100,100))
@@ -63,15 +65,16 @@ class OrdersPage(tk.Frame):
 
             #Crud Buttons
             self.search_entry = ctk.CTkEntry(self, placeholder_text="Search...")
-            self.search_entry.pack(side="left",anchor="n", padx=(15, 20), ipadx=100)
+            self.search_entry.pack(side="left",anchor="n", padx=(15, 20), ipadx=75)
 
             # Add Approve, Cancel for Status
             self.srch_btn = self.add_del_upd('SEARCH', '#5dade2',command=self.srch_order)
-            self.add_btn = self.add_del_upd('ADD ORDER', '#2ecc71', command=self.add_orders)
-            self.approve_order_btn = self.add_del_upd('APPROVE ORDER', '#27ae60',command=self.approve_order)
-            self.cancel_order_btn = self.add_del_upd('CANCEL ORDER', '#95a5a6', command=self.cancel_order)
-            self.del_btn = self.add_del_upd('DELETE ORDER', '#e74c3c', command=self.del_order)
-            self.excel_btn = self.add_del_upd('UPDATE ORDER', '#f39c12', command=self.upd_order)
+            self.add_btn = self.add_del_upd('ADD', '#2ecc71', command=self.add_orders)
+            self.approve_order_btn = self.add_del_upd('APPROVE', '#27ae60',command=self.approve_order)
+            self.deliver_order_btn = self.add_del_upd('DELIVERED', '#3498db', command=self.order_done)
+            self.cancel_order_btn = self.add_del_upd('CANCEL', '#95a5a6', command=self.cancel_order)
+            self.del_btn = self.add_del_upd('DELETE', '#e74c3c', command=self.del_order)
+            self.excel_btn = self.add_del_upd('UPDATE', '#f39c12', command=self.upd_order)
 
             # Treeview style
             style = ttk.Style(self)
@@ -85,8 +88,8 @@ class OrdersPage(tk.Frame):
 
             self.order_tree = ttk.Treeview(        
             tree_frame,
-                columns=('order_id', 'order_name', 'product_id', 'order_date', 
-                        'order_dl', 'order_amount', 'mats_need','client_id', 'status_quo'),
+                columns=('order_id', 'order_name', 'product_id', 'client_id', 
+                        'order_amount', 'order_date', 'order_dl','mats_need', 'status_quo'),
                 show='headings',
                 style='Treeview'
             )
@@ -97,11 +100,11 @@ class OrdersPage(tk.Frame):
             self._column_heads('order_id', 'ORDER ID')
             self._column_heads('order_name', 'ORDER NAME')
             self._column_heads('product_id', 'PRODUCT')
+            self._column_heads('client_id', 'CLIENT ID')
+            self._column_heads('order_amount', 'VOLUME')
             self._column_heads('order_date', 'ORDER DATE')
             self._column_heads('order_dl', 'DEADLINE')
-            self._column_heads('order_amount', 'VOLUME')
             self._column_heads('mats_need', 'TOTAL MATERIALS')
-            self._column_heads('client_id', 'CLIENT ID')
             self._column_heads('status_quo', 'STATUS')
 
             # Configure column widths and stretching
@@ -253,7 +256,6 @@ class OrdersPage(tk.Frame):
                 self.load_orders_from_db()
             except Exception as e:
                 print("Error reloading orders:", e)
-
 
     def cancel_order(self):
         selected = self.order_tree.focus()
@@ -416,19 +418,142 @@ class OrdersPage(tk.Frame):
         finally:
             conn.close()
 
+    #
+    def order_done(self):
+        selected = self.order_tree.focus()
+        if not selected:
+            messagebox.showwarning("No selection", "Please select an order to mark as delivered.")
+            return  
+
+        try:
+            user_id = self.controller.session.get('user_id')
+
+            if not user_id:
+                messagebox.showerror("Session Error", "User  not logged in.")
+                return
+
+            timestamp = datetime.now(pytz.timezone('Asia/Manila')).strftime('%Y-%m-%d %H:%M:%S')
+            values = self.order_tree.item(selected, 'values')
+            order_id = values[0]
+
+            conn = sqlite3.connect('main.db')
+            c = conn.cursor()
+
+            order_info = c.execute('SELECT * FROM orders WHERE order_id = ?', (order_id,)).fetchone()
+
+
+            if not order_info:
+                messagebox.showerror("Not Found", f'Order ID: {order_id} cannot be found')
+                return
+            
+            selected_id, client_id, order_status = order_info[0], order_info[3], order_info[8]
+
+            existing_order = c.execute('SELECT * FROM order_history WHERE order_id = ?', (selected_id,)).fetchone()
+
+            if existing_order:
+                messagebox.showerror("Order Already Delivered", f"Order ID: {selected_id} has already been marked as delivered.")
+                return
+
+            # If there is any sort of confirmation from the customer that the item is delivered.
+            if order_status != "Approved":
+                messagebox.showerror("Order Status Error", f"Order ID: {selected_id} is not approved yet.")
+                return
+            else:    
+                delivery_status = "Delivered"
+                notes = f"Order ID {selected_id} has been delivered to Client: {client_id}"
+                c.execute('INSERT INTO order_history WHERE (order_id, delivery_status, changed_by, notes, timestamp) VALUES (?, ?, ?, ?, ?)',
+                        (selected_id, delivery_status, user_id, notes, timestamp))
+                logging.info(f"Order ID {selected_id} marked as delivered by User ID {user_id} at {timestamp}")
+                messagebox.showinfo("Success", f"Order ID: {selected_id} has been marked as delivered.")
+
+            conn.commit()
+            
+        except sqlite3.Error as e:
+            messagebox.showerror("Database Error", str(e))
+            return
+        finally:
+            conn.close()
+
     def show_materials_popup(self, event):
         selected = self.order_tree.focus()
         if not selected:
             return
         values = self.order_tree.item(selected, 'values')
-        mats_used = values[7] 
-        popup = tk.Toplevel(self)
-        popup.title("Materials Used")
-        popup.geometry("400x300")
-        txt = tk.Text(popup, wrap="word", state="normal")
-        txt.insert("1.0", mats_used)
-        txt.configure(state="disabled")
-        txt.pack(expand=True, fill="both", padx=10, pady=10)
+        order_id = values[0]
+        mats_used = values[7]  # Assuming this is still relevant
+
+        try:
+            conn = sqlite3.connect('main.db')
+            c = conn.cursor()
+
+            # Fetch all order history entries for the selected order
+            order_history = c.execute("SELECT status, changed_by, notes, timestamp FROM order_history WHERE order_id = ? ORDER BY timestamp DESC", (order_id,)).fetchall()
+
+            if not order_history:
+                popup_info = tk.Toplevel(self)
+                popup_info.title("Order Information")
+                popup_info.geometry("400x200")
+
+                info_frame = tk.Frame(popup_info)
+                info_frame.pack(expand=True, fill='both', padx=10, pady=10)
+
+                info_txt = tk.Text(info_frame, wrap='word', font=('Arial', 12))
+                scrollbar = tk.Scrollbar(info_frame, command=info_txt.yview)
+                info_txt.configure(yscrollcommand=scrollbar.set)
+
+                scrollbar.pack(side='right', fill='y')
+                info_txt.pack(side='left', expand=True, fill='both')
+
+                info_txt.insert('end', f'This is order from: {order_id} has no history yet.\n')
+                info_txt.insert('end', f'Materials Used: {mats_used}.\n')
+                info_txt.configure(state='disabled')
+
+                btn_close = tk.Button(popup_info, text="Close", command=popup_info.destroy)
+                btn_close.pack(pady=5)
+                
+            else:
+                # Create the popup window
+                popup = tk.Toplevel(self)
+                popup.title(f"Order History - ID: {order_id}")
+                popup.geometry("600x400")
+
+                frame = tk.Frame(popup)
+                frame.pack(expand=True, fill='both', padx=10, pady=10)
+
+                txt = tk.Text(frame, wrap='word', font=('Arial', 10))
+                scrollbar = tk.Scrollbar(frame, command=txt.yview)
+                txt.configure(yscrollcommand=scrollbar.set)
+
+                scrollbar.pack(side='right', fill='y')
+                txt.pack(side='left', expand=True, fill='both')
+
+                # Insert materials used and order history entries
+                txt.insert('end', f"Materials Used for Order ID: {order_id}\n")
+                txt.insert('end', "="*50 + "\n")
+                txt.insert('end', f"{mats_used}\n\n")
+                txt.insert('end', "Order History:\n")
+                txt.insert('end', "="*50 + "\n\n")
+
+                for entry in order_history:
+                    status, changed_by, notes, timestamp = entry
+                    txt.insert('end', f"Status: {status}\n")
+                    txt.insert('end', f"Changed by: {changed_by}\n")
+                    txt.insert('end', f"Timestamp: {timestamp}\n")
+                    txt.insert('end', f"Notes: {notes}\n")
+                    txt.insert('end', "-"*50 + "\n\n")
+
+                # Make text read-only
+                txt.configure(state='disabled')
+
+                # Close button
+                btn_close = tk.Button(popup, text="Close", command=popup.destroy)
+                btn_close.pack(pady=5)
+
+        except Exception as e:
+            messagebox.showerror("Database Error", str(e))
+            return
+        finally:
+            conn.close()
 
     def add_del_upd(self, text, fg_color, command):
         button = CTkButton(self, text=text, fg_color=fg_color, width=80, command=command)
