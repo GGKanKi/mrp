@@ -60,11 +60,11 @@ class ClientsPage(tk.Frame):
         self.search_entry = ctk.CTkEntry(self, placeholder_text="Search...")
         self.search_entry.pack(side="left", anchor="n", padx=(15, 20), ipadx=150)
 
-        self.srch_btn = self.add_del_upd('SEARCH', command=self.srch_clients)
-        self.add_btn = self.add_del_upd('ADD CLIENT', command=self.add_clients)
-        self.del_btn = self.add_del_upd('DELETE CLIENT', command=self.del_clients)
-        self.update_btn = self.add_del_upd('UPDATE CLIENT', command=self.upd_clients)
-        self.check_orders = self.add_del_upd('CHECK ORDER', command=self.clients_to_order)
+        self.srch_btn = self.add_del_upd('SEARCH', '#5dade2', command=self.srch_clients)
+        self.add_btn = self.add_del_upd('ADD CLIENT', '#2ecc71', command=self.add_clients)
+        self.del_btn = self.add_del_upd('DELETE CLIENT', '#e74c3c', command=self.del_clients)
+        self.update_btn = self.add_del_upd('UPDATE CLIENT', '#f39c12', command=self.upd_clients)
+        self.check_orders = self.add_del_upd('CHECK ORDER', '#95a5a6', command=self.clients_to_order)
 
         # Treeview style
         style = ttk.Style(self)
@@ -116,8 +116,8 @@ class ClientsPage(tk.Frame):
     def handle_logout(self):
         handle_logout(self)
 
-    def add_del_upd(self, text, command):
-        button = ctk.CTkButton(self, text=text, width=73, command=command)
+    def add_del_upd(self, text, fg_color,  command):
+        button = ctk.CTkButton(self, text=text, width=73, fg_color = fg_color, command=command)
         button.pack(side="left", anchor="n", padx=4)
 
     def load_clients_from_db(self):
@@ -367,14 +367,44 @@ class ClientsPage(tk.Frame):
         values = self.client_tree.item(selected, 'values')
         client_information = values[0:5]  # Assuming the first 5 values are relevant for the popup
         client_information = "\n".join(f"{key}: {value}" for key, value in zip(['Client ID', 'Name', 'Email', 'Address', 'Contact'], client_information))
-        popup = tk.Toplevel(self)
-        popup.title("Materials Used")
-        popup.geometry("400x300")
-        txt = tk.Text(popup, wrap="word", state="normal")
-        txt.insert("1.0", client_information)
-        txt.configure(state="disabled")
-        txt.pack(expand=True, fill="both", padx=10, pady=10)
-        self.client_act.info(f"Client details viewed for ID: {values[0]}, Time: {datetime.now(pytz.timezone('Asia/Manila')).strftime('%Y-%m-%d %H:%M:%S')}")
+
+
+        try:
+            conn = sqlite3.connect('main.db')
+            c = conn.cursor()
+
+            client_history = c.execute("""
+                SELECT o.order_id, o.product_id, o.order_date, o.deadline
+                FROM orders o
+                WHERE o.client_id = ?
+                """, (values[0],)).fetchall()
+            
+            if not client_history:
+                messagebox.showinfo("No History", "No order history found for this client.")
+                return
+
+            else:
+                client_information += "\n\nOrder History:\n"
+                client_information += "\n".join(f"Order ID: {row[0]}, Product ID: {row[1]}, Order Date: {row[2]}, Deadline: {row[3]}" for row in client_history)
+
+                popup = tk.Toplevel(self)
+                popup.title("User Order History")
+                popup.geometry("400x300")
+                txt = tk.Text(popup, wrap="word", state="normal")
+                txt.insert("1.0", client_information)
+                txt.configure(state="disabled")
+                txt.pack(expand=True, fill="both", padx=10, pady=10)
+                self.client_act.info(f"Client details viewed for ID: {values[0]}, Time: {datetime.now(pytz.timezone('Asia/Manila')).strftime('%Y-%m-%d %H:%M:%S')}")
+        except sqlite3.Error as e:
+            messagebox.showerror("Database Error", "An error occurred while accessing the database.")
+            print(e)
+            return
+        except Exception as e:
+            messagebox.showerror(f'Unexpected Error {e}')
+            print(e)
+            return
+        finally:
+            conn.close()
 
 
     def _column_heads(self, columns, text):
