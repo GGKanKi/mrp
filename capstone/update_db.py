@@ -1,4 +1,7 @@
 import sqlite3
+import hashlib
+import os
+import uuid
 from datetime import datetime
 
 def create_database():
@@ -49,6 +52,57 @@ def create_database():
             reset_token_expiry DATETIME
         )
     """)
+
+    '''    # User details
+    user_id = 'nate'
+    f_name = "Nate"
+    l_name = "Diaz"
+    m_name = "Robert"
+    useremail = "nate@example.com"
+    phonenum = "09123456788"
+    username = "nate"
+
+    # Password setup
+    password = "admin"
+    salt = os.urandom(16).hex()
+    password_hash = hashlib.sha256((password + salt).encode()).hexdigest()
+
+    usertype = "admin"
+    userimage = None
+    last_login = None
+    failed_login_attempts = 0
+    account_locked = 0
+    date_created = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    last_updated = date_created
+    reset_token = None
+    reset_token_expiry = None
+
+    # Insert into database
+    sql = """
+    INSERT INTO users (
+        user_id, f_name, l_name, m_name, useremail, phonenum, username, 
+        password_hash, salt, usertype, userimage, last_login, 
+        failed_login_attempts, account_locked, date_created, last_updated,
+        reset_token, reset_token_expiry
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """
+
+    values = (
+        user_id, f_name, l_name, m_name, useremail, phonenum, username, 
+        password_hash, salt, usertype, userimage, last_login, 
+        failed_login_attempts, account_locked, date_created, last_updated,
+        reset_token, reset_token_expiry
+    )
+
+    print("SQL:", sql)
+    print("Placeholders:", sql.count("?"))
+    print("Values:", values)
+    print("Values count:", len(values))
+
+    c.execute(sql, values)'''
+
+
+    
 
     # Messages Table (enhanced)
     c.execute("""
@@ -178,7 +232,7 @@ def create_database():
         CREATE TABLE IF NOT EXISTS order_history (
             history_id INTEGER PRIMARY KEY AUTOINCREMENT,
             order_id TEXT NOT NULL,
-            status TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'Pending',
             changed_by TEXT NOT NULL,
             notes TEXT,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -186,6 +240,8 @@ def create_database():
             FOREIGN KEY (changed_by) REFERENCES users(user_id)
         )
     """)
+
+    
     
     # Inventory Transactions Table (new)
     c.execute("""
@@ -246,20 +302,6 @@ def create_database():
         END;
     """)
 
-    # Insert initial admin user if not exists
-    try:
-        c.execute("""
-            INSERT INTO users (
-                user_id, f_name, l_name, useremail, username, 
-                password_hash, salt, usertype
-            ) 
-            SELECT 
-                'admin001', 'System', 'Admin', 'admin@example.com', 'admin',
-                'hashed_password_placeholder', 'salt_placeholder', 'admin'
-            WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'admin')
-        """)
-    except sqlite3.IntegrityError:
-        pass  
     # Admin already exists
 
     conn.commit()
