@@ -450,3 +450,4 @@ class LoginPage(tk.Frame):
             return
         finally:
             conn.close()
+
