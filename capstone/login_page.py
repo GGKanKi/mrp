@@ -15,6 +15,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import pandas as pd
 import os
+import hashlib
+import bcrypt
 import logging
 
 from pages_handler import FrameNames
@@ -214,9 +216,12 @@ class LoginPage(tk.Frame):
 
         CTkButton(self, text='SIGN UP', font=("futura", 12, 'bold'), width=120, height=30, bg_color='white',
                   fg_color='blue', corner_radius=10, border_width=2, border_color='black', command=self.only_owner_sign).place(x=560, y=545)
+
+        self.forgot_pass = CTkButton(self, text='FORGOT PASSWORD?', font=("futura", 12, 'bold'), width=120, height=30, bg_color='white',
+                  fg_color='blue', corner_radius=10, border_width=2, border_color='black', command=self.forgot_pass)
+        self.forgot_pass.place(x=560, y=580)
         
-    
-    def only_owner_sign(self, title = "Owner Verification"):
+    def only_owner_sign(self, title="Owner Verification"):
         self.only_owner = tk.Toplevel(self)
         self.only_owner.title("Owner Sign Up")
         self.only_owner.geometry("400x300")
@@ -224,17 +229,50 @@ class LoginPage(tk.Frame):
 
         CTkLabel(self.only_owner, text="Owner Verification", font=("Futura", 20, 'bold')).pack(pady=20)
         CTkLabel(self.only_owner, text="PASSCODE").pack(pady=10)
-        self.passcode_entry = CTkEntry(self.only_owner, show="*", placeholder_text="Enter Passcode", width=200)
-        self.passcode_entry.pack(pady=10)
+        passcode_entry = CTkEntry(self.only_owner, show="*", placeholder_text="Enter Passcode", width=200)
+        passcode_entry.pack(pady=10)
 
-        conn = sqlite3.connect('main.db')
-        c = conn.cursor()
-        c.execute("SELECT password FROM users WHERE user_id = 'a'")
-        owner_pass = c.fetchone()
-        conn.close()
+        try:
+            conn = sqlite3.connect('main.db')
+            c = conn.cursor()
+            admin_pass = c.execute("SELECT * FROM users WHERE user_id = 'nickdiaz'").fetchone()
 
-        CTkButton(self.only_owner, text="Verify", command = lambda: self.controller.show_frame(FrameNames.SIGNUP) if self.passcode_entry.get() == owner_pass[0] else messagebox.showerror("Error", "Incorrect Passcode")
-).pack(pady=20)
+            if not admin_pass:
+                messagebox.showerror("Error", "Owner passcode not found in the database.")
+                self.only_owner.destroy()
+                return
+
+            # Unpack stored values
+            _, _, _, _, _, _, _, password_hash, salt, _ = admin_pass[0:10]
+
+        except sqlite3.Error as e:
+            messagebox.showerror("Database Error", f"An error occurred: {e}")
+            self.only_owner.destroy()
+            return
+        except Exception as e:
+            messagebox.showerror("Error", f"An unexpected error occurred: {e}")
+            self.only_owner.destroy()
+            return
+        finally:
+            conn.close()
+
+        def verify_passcode():
+            entered_password = passcode_entry.get()
+
+            if password_hash.startswith('$2b$'): 
+                if bcrypt.checkpw(entered_password.encode('utf-8'), password_hash.encode('utf-8')):
+                    self.controller.show_frame(FrameNames.SIGNUP)
+                else:
+                    messagebox.showerror("Error", "Incorrect Passcode")
+            else:  #
+                computed_hash = hashlib.sha256((entered_password + salt).encode()).hexdigest()
+                if computed_hash == password_hash:
+                    self.controller.show_frame(FrameNames.SIGNUP)
+                else:
+                    messagebox.showerror("Error", "Incorrect Passcode")
+
+        CTkButton(self.only_owner, text="Verify", command=verify_passcode).pack(pady=20)
+
 
 
     def login(self):
@@ -248,8 +286,9 @@ class LoginPage(tk.Frame):
         if not username or not password:
             messagebox.showwarning("Input Error", "Please enter both username and password.")
             self.attempts += 1
-            print(f"DEBUG: Empty fields. Attempts={self.attempts}")
-            self.login_warning.warning(f"Empty fields for login attempt {self.attempts}, Time: {datetime.now(pytz.timezone('Asia/Manila')).strftime('%Y-%m-%d %H:%M:%S')}")
+            self.login_warning.warning(
+                f"Empty fields for login attempt {self.attempts}, Time: {datetime.now(pytz.timezone('Asia/Manila')).strftime('%Y-%m-%d %H:%M:%S')}"
+            )
             self.check_attempts()
             return
 
@@ -258,66 +297,88 @@ class LoginPage(tk.Frame):
             c = conn.cursor()
 
             # Verify credentials
-            c.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, password))
-            user = c.fetchone()
+            login_user = c.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
 
-            if user:
-                # Unpack user data (adjust indices to match your DB schema)
-                # Example: (user_id, f_name, m_name, l_name, e_mail, number, username, password, confirm_pass, user_type)
-                user_id = user[0]
-                f_name = user[1]
-                m_name = user[2]
-                l_name = user[3]
-                e_mail = user[4]
-                number = user[5]
-                username_db = user[6]
-                password_db = user[7]
-                confirm_pass = user[8]
-                user_type = user[9]
-
-                # Store in session using your controller's login method
-                self.controller.login(
-                    user_id, f_name, m_name, l_name, e_mail, number,
-                    username_db, password_db, confirm_pass, user_type
-                )
-
-                self.attempts = 0  # Reset attempts on success
-                self.username_entry.delete(0, tk.END)
-                self.password_entry.delete(0, tk.END)
-
-                timestamp = datetime.now(pytz.timezone('Asia/Manila')).strftime('%Y-%m-%d %H:%M:%S')
-                c.execute("INSERT INTO user_logs (user_id, action, timestamp) VALUES (?, ?, ?)",
-                        (user_id, 'Login', timestamp))
-                conn.commit()
-                self.login_act.info(f"User {user_id} logged in at {timestamp}")
-
-                
-                # Check inventory after successful login/Notification
-                c.execute('SELECT mat_id, mat_name, mat_volume FROM raw_mats')
-                all_items = c.fetchall()
-                low_items = [(id, name, vol) for id, name, vol in all_items if vol < 100]
-
-                if low_items:
-                    item_list = "\n".join([f"{name} (ID: {id}): {vol} units" for id, name, vol in low_items])
-                    messagebox.showwarning(
-                        'Low Volume Warning',
-                        f'There are {len(low_items)} items with low volume:\n\n{item_list}'
-                    )
-
-                # Show main page or settings page as needed
-                self.controller.show_frame("MainMRP")
-
-            else:
+            if not login_user:
                 self.attempts += 1
                 self.check_attempts()
                 messagebox.showerror("Error", "Invalid username or password")
                 self.username_entry.delete(0, tk.END)
                 self.password_entry.delete(0, tk.END)
-                self.login_warning.warning(f"Failed login attempt {self.attempts} for username: {username}, Time: {datetime.now(pytz.timezone('Asia/Manila')).strftime('%Y-%m-%d %H:%M:%S')}")
+                self.login_warning.warning(
+                    f"Failed login attempt {self.attempts} for username: {username}, Time: {datetime.now(pytz.timezone('Asia/Manila')).strftime('%Y-%m-%d %H:%M:%S')}"
+                )
+                return
+
+            # Unpack user data
+            user_id, f_name, m_name, l_name, e_mail, number, username_db, password_hash, salt, user_type = login_user[0:10]
+
+            # Password verification
+            if password_hash.startswith('$2b$'):
+                # bcrypt
+                try:
+                    login_ok = bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8'))
+                except Exception as e:
+                    login_ok = False
+                    messagebox.showerror("Error", f"Password verification failed: {e}")
+            else:
+                # SHA256 + salt
+                if salt is None:
+                    salt = ""
+                computed_hash = hashlib.sha256((password + salt).encode()).hexdigest()
+                login_ok = computed_hash == password_hash
+
+            if not login_ok:
+                self.attempts += 1
+                self.check_attempts()
+                messagebox.showerror("Error", "Invalid username or password")
+                self.username_entry.delete(0, tk.END)
+                self.password_entry.delete(0, tk.END)
+                self.login_warning.warning(
+                    f"Failed login attempt {self.attempts} for username: {username}, Time: {datetime.now(pytz.timezone('Asia/Manila')).strftime('%Y-%m-%d %H:%M:%S')}"
+                )
+                return
+
+            # Log successful login
+            timestamp = datetime.now(pytz.timezone('Asia/Manila')).strftime('%Y-%m-%d %H:%M:%S')
+            c.execute(
+                "INSERT INTO user_logs (user_id, action, timestamp) VALUES (?, ?, ?)",
+                (user_id, 'Login', timestamp)
+            )
+            c.execute('UPDATE users SET last_login = ? WHERE user_id = ?', (timestamp, user_id))
+            conn.commit()
+            self.login_act.info(f"User  {user_id} logged in at {timestamp}")
+
+            # Success
+            self.controller.login(
+                user_id, f_name, m_name, l_name, e_mail, number,
+                username_db, password_hash, None, user_type
+            )
+
+            self.attempts = 0
+            self.username_entry.delete(0, tk.END)
+            self.password_entry.delete(0, tk.END)
+
+            # Check inventory after successful login/Notification
+            c.execute('SELECT mat_id, mat_name, mat_volume FROM raw_mats')
+            all_items = c.fetchall()
+            low_items = [(id, name, vol) for id, name, vol in all_items if vol < 100]
+
+            if low_items:
+                item_list = "\n".join([f"{name} (ID: {id}): {vol} units" for id, name, vol in low_items])
+                messagebox.showwarning(
+                    'Low Volume Warning',
+                    f'There are {len(low_items)} items with low volume:\n\n{item_list}'
+                )
+
+            # Show main page or settings page as needed
+            self.controller.show_frame("MainMRP")
 
         except sqlite3.Error as e:
             messagebox.showerror("Database Error", f"An error occurred: {e}")
-            self.login_error.error(f"Database error during login attempt {self.attempts}: {e}, Time: {datetime.now(pytz.timezone('Asia/Manila')).strftime('%Y-%m-%d %H:%M:%S')}")
+            self.login_error.error(
+                f"Database error during login attempt {self.attempts}: {e}, Time: {datetime.now(pytz.timezone('Asia/Manila')).strftime('%Y-%m-%d %H:%M:%S')}"
+            )
         finally:
             conn.close()
 
@@ -345,6 +406,7 @@ class LoginPage(tk.Frame):
             self.login_error.error(f"Account unlocked after {self.lock_time} seconds, Time: {datetime.now(pytz.timezone('Asia/Manila')).strftime('%Y-%m-%d %H:%M:%S')}")
 
     def unlock_account(self):
+
         print("DEBUG: Unlocking account")
         self.locked = False
         self.attempts = 0
@@ -352,3 +414,39 @@ class LoginPage(tk.Frame):
         self.timer_label.config(text="")
         messagebox.showinfo("Unlocked", "You may now attempt to login again.")
         self.login_act.info(f"Account unlocked, Time: {datetime.now(pytz.timezone('Asia/Manila')).strftime('%Y-%m-%d %H:%M:%S')}")
+
+    def forgot_pass(self, title="Forgot Password"):
+        self.forgot_pass = tk.Toplevel(self)
+        self.forgot_pass.title("Forgot Password")
+        self.forgot_pass.geometry("400x200")
+        self.forgot_pass.grab_set()
+
+        CTkLabel(self.forgot_pass, text="Forgot Password", font=("Futura", 20, 'bold')).pack(pady=20)
+        CTkLabel(self.forgot_pass, text="Enter your username: ").pack(pady=10)
+        self.forgot_username_entry = CTkEntry(self.forgot_pass, placeholder_text="Username", width=200)
+        self.forgot_username_entry.pack(pady=10)
+
+        try:
+
+            conn = sqlite3.connect('main.db')
+            c = conn.cursor()
+
+            forgot_username = self.forgot_username_entry.get().strip()
+            fetched_user = c.execute('SELECT * FROM users WHERE username = ?', (forgot_username,)).fetchone()
+
+            if not fetched_user:
+                messagebox.showerror("Error", "Username not found in the database.")
+                self.forgot_pass.destroy()
+                return
+            
+
+        except sqlite3.Error as e:
+            messagebox.showerror("Database Error", f"An error occurred: {e}")
+            self.forgot_pass.destroy()
+            return
+        except Exception as e:
+            messagebox.showerror("Error", f"An unexpected error occurred: {e}")
+            self.forgot_pass.destroy()
+            return
+        finally:
+            conn.close()
