@@ -9,12 +9,13 @@ from customtkinter import CTkLabel, CTkEntry, CTkButton, CTkFrame, CTkImage
 from PIL import Image
 import sqlite3
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import pandas as pd
 import os
+import uuid
 import hashlib
 import bcrypt
 import logging
@@ -210,16 +211,16 @@ class LoginPage(tk.Frame):
 
         self.loginbutton = CTkButton(self, text='LOGIN', font=("futura", 12, 'bold'), width=120, height=30, bg_color='white',
                   fg_color='blue', corner_radius=10, border_width=2, border_color='black', command=self.login)
-        self.loginbutton.place(x=560, y=510)
+        self.loginbutton.place(x=495, y=510)
 
         self.bind("<Return>", lambda event: self.login())
 
         CTkButton(self, text='SIGN UP', font=("futura", 12, 'bold'), width=120, height=30, bg_color='white',
-                  fg_color='blue', corner_radius=10, border_width=2, border_color='black', command=self.only_owner_sign).place(x=560, y=545)
+                  fg_color='blue', corner_radius=10, border_width=2, border_color='black', command=self.only_owner_sign).place(x=620, y=510)
 
-        self.forgot_pass = CTkButton(self, text='FORGOT PASSWORD?', font=("futura", 12, 'bold'), width=120, height=30, bg_color='white',
+        self.forgot_pass = CTkButton(self, text='FORGOT PASSWORD?', font=("futura", 12, 'bold'), width=220, height=30, bg_color='white',
                   fg_color='blue', corner_radius=10, border_width=2, border_color='black', command=self.forgot_pass)
-        self.forgot_pass.place(x=560, y=580)
+        self.forgot_pass.place(x=495, y=545)
         
     def only_owner_sign(self, title="Owner Verification"):
         self.only_owner = tk.Toplevel(self)
@@ -272,8 +273,6 @@ class LoginPage(tk.Frame):
                     messagebox.showerror("Error", "Incorrect Passcode")
 
         CTkButton(self.only_owner, text="Verify", command=verify_passcode).pack(pady=20)
-
-
 
     def login(self):
         username = self.username_entry.get().strip()
@@ -426,28 +425,105 @@ class LoginPage(tk.Frame):
         self.forgot_username_entry = CTkEntry(self.forgot_pass, placeholder_text="Username", width=200)
         self.forgot_username_entry.pack(pady=10)
 
-        try:
+        search_acc = CTkButton(self.forgot_pass, text="Reset Password", command=self.reset_password)
+        search_acc.pack(pady=20)
+        reset_pass = CTkButton(self.forgot_pass, text="Reset Password with Token", command=lambda: [self.show_reset_password_dialog(), self.forgot_pass.destroy()]
+)
+        reset_pass.pack(pady=10)
 
+    def reset_password(self):
+        forgot_username = self.forgot_username_entry.get().strip()
+        if not forgot_username:
+            messagebox.showwarning("Input Error", "Please enter a username.")
+            return
+        try:
             conn = sqlite3.connect('main.db')
             c = conn.cursor()
-
-            forgot_username = self.forgot_username_entry.get().strip()
-            fetched_user = c.execute('SELECT * FROM users WHERE username = ?', (forgot_username,)).fetchone()
-
+            fetched_user = c.execute('SELECT user_id, reset_token, reset_token_expiry FROM users WHERE username = ?', (forgot_username,)).fetchone()
             if not fetched_user:
                 messagebox.showerror("Error", "Username not found in the database.")
-                self.forgot_pass.destroy()
                 return
-            
-
+            user_id, reset_token, reset_expiry = fetched_user
+            # Generate a new reset token and expiry time
+            new_reset_token = str(uuid.uuid4())
+            expiry_time = datetime.now(pytz.timezone('Asia/Manila')) + timedelta(minutes=30)
+            # Update the user record with the new reset token and expiry
+            c.execute('UPDATE users SET reset_token = ?, reset_token_expiry = ? WHERE user_id = ?', (new_reset_token, expiry_time, user_id))
+            conn.commit()
+                    # Notify the user about the reset token
+            messagebox.showinfo("Success", "Username found. You can now reset your password.")
+            messagebox.showinfo("Reset Token", f"Your reset token is: {new_reset_token}\nIt will expire at {expiry_time.strftime('%Y-%m-%d %H:%M:%S')}")
         except sqlite3.Error as e:
             messagebox.showerror("Database Error", f"An error occurred: {e}")
-            self.forgot_pass.destroy()
-            return
-        except Exception as e:
-            messagebox.showerror("Error", f"An unexpected error occurred: {e}")
-            self.forgot_pass.destroy()
-            return
         finally:
             conn.close()
 
+    def show_reset_password_dialog(self):
+        """Show dialog to reset password using token"""
+        self.reset_dialog = tk.Toplevel(self)
+        self.reset_dialog.title("Reset Password")
+        self.reset_dialog.geometry("400x300")
+
+        tk.Label(self.reset_dialog, text="Reset Password", font=("Arial", 16)).pack(pady=10)
+
+        tk.Label(self.reset_dialog, text="Username:").pack()
+        self.reset_username_entry = CTkEntry(self.reset_dialog)
+        self.reset_username_entry.pack(pady=5)
+
+        tk.Label(self.reset_dialog, text="Reset Token:").pack()
+        self.reset_token_entry = CTkEntry(self.reset_dialog)
+        self.reset_token_entry.pack(pady=5)
+
+        tk.Label(self.reset_dialog, text="New Password:").pack()
+        self.new_password_entry = CTkEntry(self.reset_dialog, show="*")
+        self.new_password_entry.pack(pady=5)
+
+        tk.Button(self.reset_dialog, text="Submit", command=self.process_password_reset).pack(pady=10)
+
+    def process_password_reset(self):
+        """Verify token and update password"""
+        username = self.reset_username_entry.get().strip()
+        token = self.reset_token_entry.get().strip()
+        new_password = self.new_password_entry.get().strip()
+
+        if not all([username, token, new_password]):
+            messagebox.showwarning("Input Error", "All fields are required.")
+            return
+
+        try:
+            conn = sqlite3.connect('main.db')
+            c = conn.cursor()
+
+            # Verify the token is valid and not expired
+            current_time = datetime.now(pytz.timezone('Asia/Manila'))
+            c.execute("""
+                SELECT reset_token_expiry FROM users
+                WHERE username = ? AND reset_token = ? AND reset_token_expiry > ?
+            """, (username, token, current_time))
+
+            result = c.fetchone()
+            if not result:
+                messagebox.showerror("Error", "Invalid or expired token.")
+                return
+
+            # Generate new password hash
+            salt = os.urandom(16).hex()
+            hashed_pw = hashlib.sha256((new_password + salt).encode()).hexdigest()
+
+            # Update password and clear reset token
+            c.execute("""
+                UPDATE users
+                SET password_hash = ?, salt = ?, 
+                    reset_token = NULL, reset_token_expiry = NULL
+                WHERE username = ?
+            """, (hashed_pw, salt, username))
+
+            conn.commit()
+            messagebox.showinfo("Success", "Password has been reset successfully!")
+
+        except sqlite3.Error as e:
+            messagebox.showerror("Database Error", f"An error occurred: {e}")
+        except Exception as e:
+            messagebox.showerror("Error", f"An unexpected error occurred: {e}")
+        finally:
+            conn.close()
