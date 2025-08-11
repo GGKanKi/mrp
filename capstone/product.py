@@ -14,31 +14,19 @@ from database import DatabaseManager
 from global_func import export_materials_to_json, export_total_amount_mats
 
 class ProductManagementSystem(tk.Toplevel):
-    def __init__(self, parent, controller):
+    def __init__(self, parent, controller=None):
         self.parent = parent
         self.window = tk.Toplevel(parent)
         self.window.title("Product Management System")
-        self.window.geometry("1200x700")
-        self.window.minsize(600, 600)
+        self.window.geometry("900x600")  # Smaller window for tab-like appearance
+        self.window.minsize(700, 500)
         self.window.transient(parent)
         self.window.grab_set()
-
-        # Configure window style
         self.window.configure(bg='#f8f9fa')
-        
-        # Initialize database manager
         self.db_manager = DatabaseManager()
-
-        # Initialize total material usage for order creation
         self.current_materials = []
-
-        # Needs the values to be name:qty
         self.total_mats_need = []
-
-        # Create widgets
         self.create_widgets()
-        
-        # Handle window closing
         self.window.protocol("WM_DELETE_WINDOW", self.on_closing)
         
     def on_closing(self):
@@ -50,25 +38,25 @@ class ProductManagementSystem(tk.Toplevel):
         """Create the main interface widgets"""
         # Main container with padding
         main_container = tk.Frame(self.window, bg='#f8f9fa')
-        main_container.pack(fill='both', expand=True, padx=25, pady=25)
-        
+        main_container.pack(fill='both', expand=True, padx=5, pady=5)  # Less padding
+
         # Title
         title_label = tk.Label(main_container, 
                               text="Product Management System", 
-                              font=('Segoe UI', 22, 'bold'),
-                              bg='#f8f9fa',
+                              font=('Segoe UI', 16, 'bold'),  # Smaller font
+                              bg='#f9f9fa',
                               fg='#2c3e50')
-        title_label.pack(pady=(0, 25))
+        title_label.pack(pady=(0, 8))  # Less vertical space
         
         # Configure ttk style
         style = ttk.Style()
         style.theme_use('clam')
         style.configure('Custom.TNotebook', background='#f8f9fa', borderwidth=0)
-        style.configure('Custom.TNotebook.Tab', padding=[25, 12], font=('Segoe UI', 12, 'bold'))
-        
+        style.configure('Custom.TNotebook.Tab', padding=[10, 5], font=('Segoe UI', 10, 'bold'))  # Smaller tab
+
         # Create notebook for tabs
         self.notebook = ttk.Notebook(main_container, style='Custom.TNotebook')
-        self.notebook.pack(fill='both', expand=True)
+        self.notebook.pack(fill='both', expand=True, padx=5, pady=5)  # Add some padding
         
         # Create Product Management tab
         self.product_frame = tk.Frame(self.notebook, bg='#ffffff')
@@ -99,33 +87,33 @@ class ProductManagementSystem(tk.Toplevel):
         
         # Main content container
         content_container = tk.Frame(scrollable_frame, bg='#ffffff')
-        content_container.pack(fill='both', expand=True, padx=40, pady=40)
+        content_container.pack(fill='both', expand=True, padx=10, pady=5)  # Less padding
         
         # Product Information Section
-        product_section = tk.LabelFrame(content_container, text="  📝 Product Information  ", font=('Segoe UI', 16, 'bold'),bg='#ffffff',fg='#2c3e50', relief='solid', bd=2,padx=25, pady=20)
-        product_section.pack(fill='x', pady=(0, 25))
+        product_section = tk.LabelFrame(content_container, text="  📝 Product Information  ", font=('Segoe UI', 12, 'bold'),bg='#ffffff',fg='#2c3e50', relief='solid', bd=2,padx=10, pady=10)
+        product_section.pack(fill='x', pady=(0, 10))
         
         # Product name input
         tk.Label(product_section, 
-                text="Product Name:",font=('Segoe UI', 12, 'bold'),bg='#ffffff',fg='#34495e').pack(anchor='w', pady=(0, 8))
+                text="Product Name:", font=('Segoe UI', 10, 'bold'),bg='#ffffff',fg='#34495e').pack(anchor='w', pady=(0, 5))
         
         self.product_name_var = tk.StringVar()
-        product_entry = tk.Entry(product_section, textvariable=self.product_name_var, font=('Segoe UI', 12),relief='solid',bd=2,width=60)
-        product_entry.pack(fill='x', pady=(0, 20), ipady=8)
+        product_entry = tk.Entry(product_section, textvariable=self.product_name_var, font=('Segoe UI', 10),relief='solid',bd=2,width=40)
+        product_entry.pack(fill='x', pady=(0, 10), ipady=4)
         
         # Materials Management Section
-        materials_section = tk.LabelFrame(content_container, text="  🔧 Materials Management  ", font=('Segoe UI', 16, 'bold'),bg='#ffffff',fg='#2c3e50',relief='solid',bd=2,padx=25,pady=20)
-        materials_section.pack(fill='both', expand=True, pady=(0, 25))
+        materials_section = tk.LabelFrame(content_container, text="  🔧 Materials Management  ", font=('Segoe UI', 12, 'bold'),bg='#ffffff',fg='#2c3e50',relief='solid',bd=2,padx=10,pady=10)
+        materials_section.pack(fill='both', expand=True, pady=(0, 10))
         
         # Material input section
         input_frame = tk.Frame(materials_section, bg='#ffffff')
-        input_frame.pack(fill='x', pady=(0, 20))
+        input_frame.pack(fill='x', pady=(0, 10))
         
         tk.Label(input_frame, 
                 text="Add New Material:", 
-                font=('Segoe UI', 12, 'bold'),
+                font=('Segoe UI', 10, 'bold'),
                 bg='#ffffff',
-                fg='#34495e').pack(anchor='w', pady=(0, 12))
+                fg='#34495e').pack(anchor='w', pady=(0, 6))
         
         # Material input grid
         input_grid = tk.Frame(input_frame, bg='#ffffff')
@@ -136,44 +124,35 @@ class ProductManagementSystem(tk.Toplevel):
         
         tk.Label(input_grid, 
                 text="Material Name:", 
-                font=('Segoe UI', 11, 'bold'),
+                font=('Segoe UI', 9, 'bold'),
                 bg='#ffffff',
-                fg='#2c3e50').grid(row=0, column=0, sticky='w', padx=(0, 15), pady=8)
+                fg='#2c3e50').grid(row=0, column=0, sticky='w', padx=(0, 8), pady=4)
         
         self.material_name_var = tk.StringVar()
-        material_entry = tk.Entry(input_grid, 
-                                 textvariable=self.material_name_var, 
-                                 font=('Segoe UI', 11),
-                                 relief='solid',
-                                 bd=2)
-        material_entry.grid(row=0, column=1, sticky='ew', padx=(0, 25), pady=8, ipady=6)
+        material_entry = tk.Entry(input_grid, textvariable=self.material_name_var, font=('Segoe UI', 9),relief='solid',bd=2, width=15)
+        material_entry.grid(row=0, column=1, sticky='ew', padx=(0, 10), pady=4, ipady=3)
         
         tk.Label(input_grid, 
                 text="Quantity:", 
-                font=('Segoe UI', 11, 'bold'),
+                font=('Segoe UI', 9, 'bold'),
                 bg='#ffffff',
-                fg='#2c3e50').grid(row=0, column=2, sticky='w', padx=(0, 15), pady=8)
+                fg='#2c3e50').grid(row=0, column=2, sticky='w', padx=(0, 8), pady=4)
         
         self.material_quantity_var = tk.StringVar()
-        quantity_entry = tk.Entry(input_grid, 
-                                 textvariable=self.material_quantity_var, 
-                                 font=('Segoe UI', 11),
-                                 relief='solid',
-                                 bd=2,
-                                 width=18)
-        quantity_entry.grid(row=0, column=3, sticky='ew', padx=(0, 25), pady=8, ipady=6)
+        quantity_entry = tk.Entry(input_grid, textvariable=self.material_quantity_var, font=('Segoe UI', 9),relief='solid',bd=2, width=8)
+        quantity_entry.grid(row=0, column=3, sticky='ew', padx=(0, 10), pady=4, ipady=3)
         
         add_btn = tk.Button(input_grid, 
                            text="➕ Add Material", 
                            command=self.add_material,
-                           font=('Segoe UI', 11, 'bold'),
+                           font=('Segoe UI', 9, 'bold'),
                            bg='#27ae60',
                            fg='white',
                            relief='flat',
                            cursor='hand2',
-                           padx=20,
-                           pady=8)
-        add_btn.grid(row=0, column=4, padx=(15, 0), pady=8)
+                           padx=10,
+                           pady=4)
+        add_btn.grid(row=0, column=4, padx=(8, 0), pady=4)
         
         # Materials list section
         list_frame = tk.Frame(materials_section, bg='#ffffff')
@@ -181,37 +160,32 @@ class ProductManagementSystem(tk.Toplevel):
         
         tk.Label(list_frame, 
                 text="Current Materials List:", 
-                font=('Segoe UI', 12, 'bold'),
+                font=('Segoe UI', 10, 'bold'),
                 bg='#ffffff',
-                fg='#34495e').pack(anchor='w', pady=(0, 12))
+                fg='#34495e').pack(anchor='w', pady=(0, 6))
         
         # Listbox with scrollbar
         listbox_container = tk.Frame(list_frame, bg='#ffffff', relief='solid', bd=2)
         listbox_container.pack(fill='both', expand=True)
         
-        self.materials_listbox = tk.Listbox(listbox_container, 
-                                           font=('Segoe UI', 11),
-                                           relief='flat',
-                                           bd=0,
-                                           selectmode=tk.SINGLE,
-                                           height=10,
-                                           bg='#f8f9fa')
+        self.materials_listbox = tk.Listbox(listbox_container, font=('Segoe UI', 9),
+            relief='flat', bd=0, selectmode=tk.SINGLE, height=7, bg='#f8f9fa', width=40)
         materials_scrollbar = ttk.Scrollbar(listbox_container, orient="vertical", command=self.materials_listbox.yview)
         self.materials_listbox.configure(yscrollcommand=materials_scrollbar.set)
         
-        self.materials_listbox.pack(side=tk.LEFT, fill='both', expand=True, padx=10, pady=10)
-        materials_scrollbar.pack(side=tk.RIGHT, fill=tk.Y, pady=10)
+        self.materials_listbox.pack(side=tk.LEFT, fill='both', expand=True, padx=5, pady=5)
+        materials_scrollbar.pack(side=tk.RIGHT, fill=tk.Y, pady=5)
         
         # Action buttons section
         action_section = tk.Frame(content_container, bg='#ffffff')
-        action_section.pack(fill='x', pady=25)
+        action_section.pack(fill='x', pady=10)
         
         button_style = {
-            'font': ('Segoe UI', 12, 'bold'),
+            'font': ('Segoe UI', 10, 'bold'),
             'relief': 'flat',
             'cursor': 'hand2',
-            'padx': 25,
-            'pady': 12
+            'padx': 10,
+            'pady': 6
         }
         
         remove_btn = tk.Button(action_section, 
@@ -220,7 +194,7 @@ class ProductManagementSystem(tk.Toplevel):
                               bg='#e74c3c',
                               fg='white',
                               **button_style)
-        remove_btn.pack(side=tk.LEFT, padx=(0, 15))
+        remove_btn.pack(side=tk.LEFT, padx=(0, 8))
         
         create_btn = tk.Button(action_section, 
                               text="✅ Create Product", 
@@ -228,7 +202,7 @@ class ProductManagementSystem(tk.Toplevel):
                               bg='#3498db',
                               fg='white',
                               **button_style)
-        create_btn.pack(side=tk.LEFT, padx=(0, 15))
+        create_btn.pack(side=tk.LEFT, padx=(0, 8))
         
         view_btn = tk.Button(action_section, 
                             text="📋 View All Products", 
@@ -237,7 +211,7 @@ class ProductManagementSystem(tk.Toplevel):
                             fg='white',
                             **button_style)
         view_btn.pack(side=tk.LEFT)
-        
+
         # Pack canvas and scrollbar
         main_canvas.pack(side="left", fill="both", expand=True)
         main_scrollbar.pack(side="right", fill="y")
@@ -264,94 +238,94 @@ class ProductManagementSystem(tk.Toplevel):
         
         # Main content container
         content_container = tk.Frame(scrollable_frame, bg='#ffffff')
-        content_container.pack(fill='both', expand=True, padx=40, pady=40)
+        content_container.pack(fill='both', expand=True, padx=10, pady=5)  # Less padding
         
         # Order Information Section
         order_section = tk.LabelFrame(content_container, 
                                      text="  📋 Order Information  ",
-                                     font=('Segoe UI', 16, 'bold'),
+                                     font=('Segoe UI', 12, 'bold'),
                                      bg='#ffffff',
                                      fg='#2c3e50',
                                      relief='solid',
                                      bd=2,
-                                     padx=25,
-                                     pady=20)
-        order_section.pack(fill='x', pady=(0, 25))
+                                     padx=10,
+                                     pady=10)
+        order_section.pack(fill='x', pady=(0, 10))
         
         # Order name input
         tk.Label(order_section, 
                 text="Order Name:", 
-                font=('Segoe UI', 12, 'bold'),
+                font=('Segoe UI', 10, 'bold'),
                 bg='#ffffff',
-                fg='#34495e').pack(anchor='w', pady=(0, 8))
+                fg='#34495e').pack(anchor='w', pady=(0, 5))
         
         self.order_name_var = tk.StringVar()
         order_entry = tk.Entry(order_section, 
                               textvariable=self.order_name_var, 
-                              font=('Segoe UI', 12),
+                              font=('Segoe UI', 10),
                               relief='solid',
                               bd=2,
-                              width=60)
-        order_entry.pack(fill='x', pady=(0, 20), ipady=8)
+                              width=40)
+        order_entry.pack(fill='x', pady=(0, 10), ipady=4)
         
         # Selection Section
         selection_section = tk.LabelFrame(content_container, 
                                          text="  🎯 Product & Client Selection  ",
-                                         font=('Segoe UI', 16, 'bold'),
+                                         font=('Segoe UI', 12, 'bold'),
                                          bg='#ffffff',
                                          fg='#2c3e50',
                                          relief='solid',
                                          bd=2,
-                                         padx=25,
-                                         pady=20)
-        selection_section.pack(fill='x', pady=(0, 25))
+                                         padx=10,
+                                         pady=10)
+        selection_section.pack(fill='x', pady=(0, 10))
         
         # Product selection
         tk.Label(selection_section, 
                 text="Select Product:", 
-                font=('Segoe UI', 12, 'bold'),
+                font=('Segoe UI', 10, 'bold'),
                 bg='#ffffff',
-                fg='#34495e').pack(anchor='w', pady=(0, 8))
+                fg='#34495e').pack(anchor='w', pady=(0, 5))
         
         self.selected_product_var = tk.StringVar()
         self.product_combo = ttk.Combobox(selection_section, 
                                          textvariable=self.selected_product_var, 
                                          state="readonly", 
-                                         font=('Segoe UI', 11),
-                                         width=70)
-        self.product_combo.pack(fill='x', pady=(0, 15), ipady=6)
+                                         font=('Segoe UI', 9),
+                                         width=40)
+        self.product_combo.pack(fill='x', pady=(0, 8), ipady=3)
         self.product_combo.bind('<<ComboboxSelected>>', self.on_product_selected)
         
         # Client selection
         tk.Label(selection_section, 
                 text="Select Client:", 
-                font=('Segoe UI', 12, 'bold'),
+                font=('Segoe UI', 10, 'bold'),
                 bg='#ffffff',
-                fg='#34495e').pack(anchor='w', pady=(0, 8))
+                fg='#34495e').pack(anchor='w', pady=(0, 5))
         
         self.selected_client_var = tk.StringVar()
         self.client_combo = ttk.Combobox(selection_section, 
                                         textvariable=self.selected_client_var, 
                                         state="readonly", 
-                                        font=('Segoe UI', 11),
-                                        width=70)
-        self.client_combo.pack(fill='x', pady=(0, 15), ipady=6)
+                                        font=('Segoe UI', 9),
+                                        width=40)
+        self.client_combo.pack(fill='x', pady=(0, 8), ipady=3)
         
         # Order Details Section
         details_section = tk.LabelFrame(content_container, 
                                        text="  📊 Order Details  ",
-                                       font=('Segoe UI', 16, 'bold'),
+                                       font=('Segoe UI', 12, 'bold'),
                                        bg='#ffffff',
                                        fg='#2c3e50',
                                        relief='solid',
                                        bd=2,
-                                       padx=25,
-                                       pady=20)
-        details_section.pack(fill='x', pady=(0, 25))
+                                       padx=10,
+                                       pady=10)
+        details_section.pack(fill='x', pady=(0, 10))
         
         # Details grid
         details_grid = tk.Frame(details_section, bg='#ffffff')
-        details_grid.pack(fill='x', pady=(0, 15))
+        details_grid.pack(fill='x', pady=(0, 8))
         
         # Configure grid weights
         details_grid.columnconfigure(1, weight=1)
@@ -359,124 +333,126 @@ class ProductManagementSystem(tk.Toplevel):
         
         tk.Label(details_grid, 
                 text="Quantity:", 
-                font=('Segoe UI', 12, 'bold'),
+                font=('Segoe UI', 10, 'bold'),
                 bg='#ffffff',
-                fg='#34495e').grid(row=0, column=0, sticky='w', padx=(0, 15), pady=8)
+                fg='#34495e').grid(row=0, column=0, sticky='w', padx=(0, 8), pady=4)
         
         self.order_quantity_var = tk.StringVar()
         quantity_entry = tk.Entry(details_grid, 
                                  textvariable=self.order_quantity_var, 
-                                 font=('Segoe UI', 11),
+                                 font=('Segoe UI', 9),
                                  relief='solid',
                                  bd=2,
-                                 width=25)
-        quantity_entry.grid(row=0, column=1, sticky='ew', padx=(0, 30), pady=8, ipady=6)
+                                 width=12)
+        quantity_entry.grid(row=0, column=1, sticky='ew', padx=(0, 10), pady=4, ipady=3)
         quantity_entry.bind('<KeyRelease>', self.on_quantity_changed)
         
         tk.Label(details_grid, 
                 text="Deadline:", 
-                font=('Segoe UI', 12, 'bold'),
+                font=('Segoe UI', 10, 'bold'),
                 bg='#ffffff',
-                fg='#34495e').grid(row=0, column=2, sticky='w', padx=(0, 15), pady=8)
+                fg='#34495e').grid(row=0, column=2, sticky='w', padx=(0, 8), pady=4)
         
         self.deadline_tab = tk.StringVar()
         deadline_entry = DateEntry(details_grid, 
                                 textvariable=self.deadline_tab, 
-                                font=('Segoe UI', 11),
+                                font=('Segoe UI', 9),
                                 relief='solid',
                                 bd=2,
-                                width=25,
+                                width=12,
                                 date_pattern='mm/dd/yyyy',
                                 background='#f8f9fa',
                                 foreground='#34495e',
                                 calendar_background='#f8f9fa')
-        deadline_entry.grid(row=0, column=3, sticky='ew', padx=(0, 20), pady=8, ipady=6)
+        deadline_entry.grid(row=0, column=3, sticky='ew', padx=(0, 10), pady=4, ipady=3)
         
         # Calculate button
         calc_btn = tk.Button(details_grid, 
                             text="🧮 Calculate Materials", 
                             command=self.calculate_materials,
-                            font=('Segoe UI', 11, 'bold'),
+                            font=('Segoe UI', 9, 'bold'),
                             bg='#f39c12',
                             fg='white',
                             relief='flat',
                             cursor='hand2',
-                            padx=20,
-                            pady=8)
-        calc_btn.grid(row=0, column=4, padx=(15, 0), pady=8)
+                            padx=10,
+                            pady=4)
+        calc_btn.grid(row=0, column=4, padx=(8, 0), pady=4)
         
         # Materials Calculation Section
         calc_section = tk.LabelFrame(content_container, 
                                     text="  🔬 Materials Calculation  ",
-                                    font=('Segoe UI', 16, 'bold'),
+                                    font=('Segoe UI', 12, 'bold'),
                                     bg='#ffffff',
                                     fg='#2c3e50',
                                     relief='solid',
                                     bd=2,
-                                    padx=25,
-                                    pady=20)
-        calc_section.pack(fill='both', expand=True, pady=(0, 25))
+                                    padx=10,
+                                    pady=10)
+        calc_section.pack(fill='both', expand=True, pady=(0, 10))
         
         # Product materials display
         tk.Label(calc_section, 
                 text="Product Materials (per unit):", 
-                font=('Segoe UI', 12, 'bold'),
+                font=('Segoe UI', 10, 'bold'),
                 bg='#ffffff',
-                fg='#34495e').pack(anchor='w', pady=(0, 8))
+                fg='#34495e').pack(anchor='w', pady=(0, 5))
         
         product_materials_container = tk.Frame(calc_section, bg='#ffffff', relief='solid', bd=2)
-        product_materials_container.pack(fill='x', pady=(0, 20))
+        product_materials_container.pack(fill='x', pady=(0, 10))
         
         self.product_materials_text = tk.Text(product_materials_container, 
-                                             height=5, 
+                                             height=3, 
                                              state='disabled', 
                                              bg='#f8f9fa',
-                                             font=('Segoe UI', 10),
+                                             font=('Segoe UI', 9),
                                              relief='flat',
                                              bd=0,
-                                             wrap=tk.WORD)
+                                             wrap=tk.WORD,
+                                             width=40)
         
         product_scrollbar = ttk.Scrollbar(product_materials_container, orient="vertical", command=self.product_materials_text.yview)
         self.product_materials_text.configure(yscrollcommand=product_scrollbar.set)
         
-        self.product_materials_text.pack(side=tk.LEFT, fill='both', expand=True, padx=10, pady=10)
-        product_scrollbar.pack(side=tk.RIGHT, fill=tk.Y, pady=10)
+        self.product_materials_text.pack(side=tk.LEFT, fill='both', expand=True, padx=5, pady=5)
+        product_scrollbar.pack(side=tk.RIGHT, fill=tk.Y, pady=5)
         
         # Required materials display
         tk.Label(calc_section, 
                 text="Required Materials (total):", 
-                font=('Segoe UI', 12, 'bold'),
+                font=('Segoe UI', 10, 'bold'),
                 bg='#ffffff',
-                fg='#34495e').pack(anchor='w', pady=(10, 8))
+                fg='#34495e').pack(anchor='w', pady=(5, 5))
         
         required_materials_container = tk.Frame(calc_section, bg='#ffffff', relief='solid', bd=2)
         required_materials_container.pack(fill='both', expand=True)
         
         self.required_materials_text = tk.Text(required_materials_container, 
-                                              height=5, 
+                                              height=3, 
                                               state='disabled', 
                                               bg='#e8f5e8',
-                                              font=('Segoe UI', 10),
+                                              font=('Segoe UI', 9),
                                               relief='flat',
                                               bd=0,
-                                              wrap=tk.WORD)
+                                              wrap=tk.WORD,
+                                              width=40)
         
         required_scrollbar = ttk.Scrollbar(required_materials_container, orient="vertical", command=self.required_materials_text.yview)
         self.required_materials_text.configure(yscrollcommand=required_scrollbar.set)
         
-        self.required_materials_text.pack(side=tk.LEFT, fill='both', expand=True, padx=10, pady=10)
-        required_scrollbar.pack(side=tk.RIGHT, fill=tk.Y, pady=10)
+        self.required_materials_text.pack(side=tk.LEFT, fill='both', expand=True, padx=5, pady=5)
+        required_scrollbar.pack(side=tk.RIGHT, fill=tk.Y, pady=5)
         
         # Action buttons section
         order_action_section = tk.Frame(content_container, bg='#ffffff')
-        order_action_section.pack(fill='x', pady=25)
+        order_action_section.pack(fill='x', pady=10)
         
         button_style = {
-            'font': ('Segoe UI', 12, 'bold'),
+            'font': ('Segoe UI', 10, 'bold'),
             'relief': 'flat',
             'cursor': 'hand2',
-            'padx': 25,
-            'pady': 12
+            'padx': 10,
+            'pady': 6
         }
         
         create_order_btn = tk.Button(order_action_section, 
@@ -485,7 +461,7 @@ class ProductManagementSystem(tk.Toplevel):
                                     bg='#27ae60',
                                     fg='white',
                                     **button_style)
-        create_order_btn.pack(side=tk.LEFT, padx=(0, 15))
+        create_order_btn.pack(side=tk.LEFT, padx=(0, 8))
         
         view_orders_btn = tk.Button(order_action_section, 
                                    text="📋 View All Orders", 
@@ -494,7 +470,7 @@ class ProductManagementSystem(tk.Toplevel):
                                    fg='white',
                                    **button_style)
         view_orders_btn.pack(side=tk.LEFT)
-        
+
         # Pack canvas and scrollbar
         main_canvas.pack(side="left", fill="both", expand=True)
         main_scrollbar.pack(side="right", fill="y")
@@ -700,7 +676,7 @@ class ProductManagementSystem(tk.Toplevel):
             self.load_products_and_clients()
             
             messagebox.showinfo("Success", f"Product '{product_name}' created successfully!\nProduct ID: {product_id}")
-            export_materials_to_json("main.db", "D:/capstone/json_f/products_materials.json")
+            export_materials_to_json("main.db", "C:/capstone/json_f/products_materials.json")
             
         except Exception as e:
             messagebox.showerror("Database Error", f"Error creating product: {str(e)}")
@@ -783,15 +759,15 @@ class ProductManagementSystem(tk.Toplevel):
                                      wrap=tk.WORD,
                                      bg='#f8f9fa')
         
-        materials_scrollbar = ttk.Scrollbar(text_container, orient="vertical", command=edit_materials_text.yview)
-        edit_materials_text.configure(yscrollcommand=materials_scrollbar.set)
-        
         # Convert materials string to readable format
         if materials:
             formatted_materials = materials.replace('; ', '\n')
             edit_materials_text.insert(1.0, formatted_materials)
         
         edit_materials_text.pack(side=tk.LEFT, fill='both', expand=True, padx=10, pady=10)
+        
+        materials_scrollbar = ttk.Scrollbar(text_container, orient="vertical", command=edit_materials_text.yview)
+        edit_materials_text.configure(yscrollcommand=materials_scrollbar.set)
         materials_scrollbar.pack(side=tk.RIGHT, fill=tk.Y, pady=10)
         
         # Buttons
@@ -979,7 +955,7 @@ pady=8)
         
         def approve_selected_product():
             """Deduct the materials used in a Product from the Inventory Table"""
-            with open('D:/capstone/json_f/products_materials.json', 'r') as f:
+            with open('C:/capstone/json_f/products_materials.json', 'r') as f:
                 product_list = json.load(f)
 
             selection = product_tree.selection()
@@ -1268,7 +1244,7 @@ pady=8)
         except Exception as e:
             messagebox.showerror("Database Error", f"Error creating order: {str(e)}")
         
-        export_total_amount_mats('main.db', 'D:/capstone/json_f/order_mats_ttl.json')
+        export_total_amount_mats('main.db', 'C:/capstone/json_f/order_mats_ttl.json')
 
 
     
@@ -1320,7 +1296,7 @@ pady=8)
                                    relief='solid',
                                    bd=2,
                                    width=50)
-        order_name_entry.pack(fill='x', pady=(0, 15), ipady=6)
+        order_name_entry.pack(fill='x', pady=(0, 10), ipady=6)
         
         # Product selection
         tk.Label(info_frame, 
@@ -1335,7 +1311,7 @@ pady=8)
                                          state="readonly", 
                                          font=('Segoe UI', 10),
                                          width=60)
-        edit_product_combo.pack(fill='x', pady=(0, 15), ipady=6)
+        edit_product_combo.pack(fill='x', pady=(0, 10), ipady=6)
         
         # Client selection
         tk.Label(info_frame, 
@@ -1350,7 +1326,7 @@ pady=8)
                                         state="readonly", 
                                         font=('Segoe UI', 10),
                                         width=60)
-        edit_client_combo.pack(fill='x', pady=(0, 15), ipady=6)
+        edit_client_combo.pack(fill='x', pady=(0, 10), ipady=6)
         
         # Details section
         details_frame = tk.LabelFrame(main_frame, 
@@ -1374,35 +1350,35 @@ pady=8)
                 text="Quantity:", 
                 font=('Segoe UI', 11, 'bold'),
                 bg='#ffffff',
-                fg='#34495e').grid(row=0, column=0, sticky='w', padx=(0, 15), pady=8)
+                fg='#34495e').grid(row=0, column=0, sticky='w', padx=(0, 8), pady=4)
         
         edit_quantity_var = tk.StringVar(value=str(quantity))
         quantity_entry = tk.Entry(details_grid, 
                                  textvariable=edit_quantity_var, 
-                                 font=('Segoe UI', 11),
+                                 font=('Segoe UI', 9),
                                  relief='solid',
                                  bd=2,
-                                 width=20)
-        quantity_entry.grid(row=0, column=1, sticky='ew', padx=(0, 30), pady=8, ipady=6)
+                                 width=12)
+        quantity_entry.grid(row=0, column=1, sticky='ew', padx=(0, 10), pady=4, ipady=3)
         
         tk.Label(details_grid, 
                 text="Deadline:", 
-                font=('Segoe UI', 12, 'bold'),
+                font=('Segoe UI', 11, 'bold'),
                 bg='#ffffff',
-                fg='#34495e').grid(row=0, column=2, sticky='w', padx=(0, 15), pady=8)
+                fg='#34495e').grid(row=0, column=2, sticky='w', padx=(0, 8), pady=4)
 
         edit_deadline_var = tk.StringVar(value=deadline)
         deadline_entry = DateEntry(details_grid, 
                                 textvariable=edit_deadline_var, 
-                                font=('Segoe UI', 11),
+                                font=('Segoe UI', 9),
                                 relief='solid',
                                 bd=2,
-                                width=25,
+                                width=12,
                                 date_pattern='mm/dd/yyyy',
                                 background='#f8f9fa',
                                 foreground='#34495e',
                                 calendar_background='#f8f9fa')
-        deadline_entry.grid(row=0, column=3, sticky='ew', padx=(0, 20), pady=8, ipady=6)
+        deadline_entry.grid(row=0, column=3, sticky='ew', padx=(0, 10), pady=4, ipady=3)
         
         # Load products and clients for dropdowns
         try:
@@ -1649,7 +1625,7 @@ pady=8)
             load_orders()  # Refresh the list
 
         def approved_selected_order():
-            with open('D:/capstone/json_f/order_mats_ttl.json', 'r') as f:
+            with open('C:/capstone/json_f/order_mats_ttl.json', 'r') as f:
                 try:
                     ttl_mats_list = json.load(f)
                 except json.JSONDecodeError:
