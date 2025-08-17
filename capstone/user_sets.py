@@ -144,6 +144,7 @@ class UserSet(tk.Frame):
         self.password_entry.insert(0, self.controller.session.get('password', ''))
         add_row("Password:", self.password_entry, 7)
 
+        #Change this to generate a salt and hash the password
         self.confirm_pass_entry = CTkEntry(form, height=28, width=220, border_width=2, border_color='#6a9bc3', show="*")
         self.confirm_pass_entry.insert(0, self.controller.session.get('confirm_pass', ''))
         add_row("Confirm Password:", self.confirm_pass_entry, 8)
@@ -237,56 +238,65 @@ class UserSet(tk.Frame):
             conn.close()
 
     def on_show(self):
-        # Remove all widgets from self.main (sidebar)
         for widget in self.main.winfo_children():
             widget.destroy()
 
+        # Retrieve user type from session
         user_type = self.controller.session.get('user_type', '')
 
+        # Create main buttons based on user type
         self.mrp_main = self._main_buttons(self.main, self.mrp_btn, 'MRP', command=lambda: self.controller.show_frame(FrameNames.MAIN_MRP))
 
-        if user_type == "admin" or user_type == "owner":
+        if user_type in ["admin", "owner"]:
             self.clients_main = self._main_buttons(self.main, self.clients_btn, 'Client', command=lambda: self.controller.show_frame(FrameNames.CLIENTS))
             self.orders_main = self._main_buttons(self.main, self.order_btn, 'Order', command=lambda: self.controller.show_frame(FrameNames.ORDERS))
             self.inventory_main = self._main_buttons(self.main, self.inv_btn, 'Storage', command=lambda: self.controller.show_frame(FrameNames.INVENTORY))
             self.supply_main = self._main_buttons(self.main, self.supply_btn, 'Supplier', command=lambda: self.controller.show_frame(FrameNames.SUPPLIERS))
-            self.user_logs_main = self._main_buttons(self.main, self.user_logs_btn, 'User Logs', command=lambda: self.controller.show_frame(FrameNames.LOGS))
-        elif user_type == "clerk" or user_type == "manager":
+            self.user_logs_main = self._main_buttons(self.main, self.user_logs_btn, 'User  Logs', command=lambda: self.controller.show_frame(FrameNames.LOGS))
+        elif user_type in ["clerk", "manager"]:
             self.inventory_main = self._main_buttons(self.main, self.inv_btn, 'Storage', command=lambda: self.controller.show_frame(FrameNames.INVENTORY))
             self.supply_main = self._main_buttons(self.main, self.supply_btn, 'Supplier', command=lambda: self.controller.show_frame(FrameNames.SUPPLIERS))
         elif user_type == "employee":
             self.clients_main = self._main_buttons(self.main, self.clients_btn, 'Client', command=lambda: self.controller.show_frame(FrameNames.CLIENTS))
             self.orders_main = self._main_buttons(self.main, self.order_btn, 'Order', command=lambda: self.controller.show_frame(FrameNames.ORDERS))
 
+        # Common buttons for all user types
         self.settings_main = self._main_buttons(self.main, self.settings_btn, 'Settings', command=lambda: self.controller.show_frame(FrameNames.SETTINGS))
-        self.logout_main = self._main_buttons(self.main, self.logout_btn,  'Logout', command=self.handle_logout)
+        self.logout_main = self._main_buttons(self.main, self.logout_btn, 'Logout', command=self.handle_logout)
 
-        # Update profile fields
-        self.user_id_entry.delete(0, "end")
-        self.user_id_entry.insert(0, self.controller.session.get('user_id', ''))
-        self.f_name_entry.delete(0, "end")
-        self.f_name_entry.insert(0, self.controller.session.get('f_name', ''))
-        self.m_name_entry.delete(0, "end")
-        self.m_name_entry.insert(0, self.controller.session.get('m_name', ''))
-        self.l_name_entry.delete(0, "end")
-        self.l_name_entry.insert(0, self.controller.session.get('l_name', ''))
-        self.email_entry.delete(0, "end")
-        self.email_entry.insert(0, self.controller.session.get('e_mail', ''))
-        self.phone_entry.delete(0, "end")
-        self.phone_entry.insert(0, self.controller.session.get('number', ''))
-        self.username_entry.delete(0, "end")
-        self.username_entry.insert(0, self.controller.session.get('username', ''))
-        self.password_entry.delete(0, "end")
-        self.password_entry.insert(0, self.controller.session.get('password', ''))
-        self.confirm_pass_entry.delete(0, "end")
-        self.confirm_pass_entry.insert(0, self.controller.session.get('confirm_pass', ''))
-        self.user_type_entry.delete(0, "end")
-        self.user_type_entry.insert(0, self.controller.session.get('user_type', ''))
+        # Update profile fields from session data
+        self.update_profile_fields()
 
+        # Load profile image from database
+        self.load_profile_image()
+
+    def update_profile_fields(self):
+        """Update profile fields with session data."""
+        fields = {
+            'user_id': self.user_id_entry,
+            'f_name': self.f_name_entry,
+            'm_name': self.m_name_entry,
+            'l_name': self.l_name_entry,
+            'e_mail': self.email_entry,
+            'number': self.phone_entry,
+            'username': self.username_entry,
+            'password': self.password_entry,
+            'confirm_pass': self.confirm_pass_entry,
+            'user_type': self.user_type_entry
+        }
+
+        for key, entry in fields.items():
+            value = self.controller.session.get(key, '')
+            print(f"Updating {key}: '{value}' (Type: {type(value)})")  # Debugging line
+            entry.delete(0, "end")
+            entry.insert(0, value)
+
+    def load_profile_image(self):
+        """Load the user's profile image from the database."""
         try:
             conn = sqlite3.connect('main.db')
             c = conn.cursor()
-            c.execute("SELECT profile_image FROM users WHERE user_id = ?", (self.controller.session.get('user_id'),))
+            c.execute("SELECT userimage FROM users WHERE user_id = ?", (self.controller.session.get('user_id'),))
             row = c.fetchone()
             if row and row[0]:
                 from io import BytesIO
@@ -295,11 +305,16 @@ class UserSet(tk.Frame):
                 self.profile_photo = CTkImage(img, size=(100, 100))
                 self.profile_image_label.configure(image=self.profile_photo, text="")
             else:
-                self.profile_image_label.configure(image=None, text="No Image")
+                img = Image.open('D:/capstone/labels/user_logo.png')
+                img = img.resize((100, 100))
+                self.profile_photo = CTkImage(img, size=(100, 100))
+                self.profile_image_label.configure(image=self.profile_photo, text="")
         except Exception as e:
             self.profile_image_label.configure(image=None, text="No Image")
+            print(f"Error loading profile image: {e}")
         finally:
             conn.close()
+
 
     def _main_buttons(self, parent, image, text, command):
         button = CTkButton(parent, image=image, text=text, bg_color="#6a9bc3", fg_color="#6a9bc3", hover_color="white",
