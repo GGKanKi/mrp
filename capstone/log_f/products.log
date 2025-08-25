@@ -1,0 +1,177 @@
+2025-07-21 23:58:14,349 - INFO - Order ORDER_6SAFRB8M created. Time: 2025-07-21 23:57:32
+2025-07-22 00:18:10,434 - INFO - User a logged out, Time: 2025-07-22 00:18:10
+2025-07-22 00:25:13,915 - INFO - User a logged out, Time: 2025-07-22 00:25:13
+2025-07-22 02:36:09,618 - INFO - Client details viewed for ID: SuicideBoys, Time: 2025-07-22 02:36:09
+2025-07-22 02:36:09,691 - INFO - Client details viewed for ID: SuicideBoys, Time: 2025-07-22 02:36:09
+2025-07-22 02:36:11,778 - INFO - Client details viewed for ID: a, Time: 2025-07-22 02:36:11
+2025-07-22 02:36:35,568 - INFO - User a logged out, Time: 2025-07-22 02:36:35, From: user_sets
+2025-07-23 02:47:03,299 - INFO - Product PROD_DJ5O6SON created succesfully, Time: 2025-07-23 02:43:55
+2025-07-23 03:25:30,367 - INFO - Order ORDER_9Z147EWZ created. Time: 2025-07-23 03:21:42
+2025-07-25 03:11:42,020 - INFO - Order ORDER_9Z147EWZ updated. Time: 2025-07-25 03:10:57
+2025-07-25 04:01:37,556 - INFO - Order ORDER_6SH4BUM9 created. Time: 2025-07-25 04:00:56
+2025-07-25 04:02:45,146 - INFO - Order ORDER_A4XVSWOR created. Time: 2025-07-25 04:02:19
+2025-07-25 04:03:07,081 - INFO - Order ORDER_6SH4BUM9 deleted from Database, Time: 2025-07-25 04:02:19
+2025-07-25 23:39:36,151 - INFO - Product PROD_PUQJWNGJ created succesfully, Time: 2025-07-25 23:38:51
+2025-07-25 23:44:17,538 - INFO - Product PROD_DAI9ARND created succesfully, Time: 2025-07-25 23:43:47
+2025-07-25 23:49:55,739 - INFO - Product PROD_AOHS0D4J created succesfully, Time: 2025-07-25 23:49:39
+2025-07-26 00:04:25,064 - INFO - Product PROD_RU2H8HVH created succesfully, Time: 2025-07-26 00:03:57
+2025-07-26 00:06:42,004 - INFO - Product PROD_U4X23ERN created succesfully, Time: 2025-07-26 00:06:19
+2025-07-26 00:08:26,243 - INFO - Product PROD_C3TKP2S8 created succesfully, Time: 2025-07-26 00:06:19
+2025-07-29 01:57:31,749 - INFO - \u2705 Exported 3 products to products_materials.json
+2025-07-29 23:59:54,075 - INFO - Order ORD-20250729235954-4DW3 created successfully
+2025-07-29 23:59:55,125 - ERROR - \u274c Export failed: no such column: order_id
+2025-07-30 00:08:26,539 - INFO - Order ORD-20250730000826-E06D created successfully
+2025-07-30 00:08:27,307 - ERROR - \u274c Export failed: no such column: order_id
+2025-07-30 00:12:09,259 - INFO - Order ORD-20250730001209-VR9K created successfully
+2025-07-30 00:12:10,117 - INFO - \u2705 Exported 5 products to order_mats_ttl.json
+2025-07-30 01:11:08,581 - INFO - Order ORD-20250730011108-VQC1 created successfully
+2025-07-30 01:11:09,655 - INFO - \u2705 Exported 6 products to order_mats_ttl.json
+2025-07-30 02:34:46,400 - INFO - Order ORD-20250730023446-AV5B created successfully
+2025-07-30 02:34:47,301 - INFO - \u2705 Exported 7 products to order_mats_ttl.json
+2025-07-31 02:14:21,747 - INFO - Order ORD-20250731021421-I18B created successfully
+2025-07-31 02:14:22,467 - INFO - \u2705 Exported 8 products to D:/capstone/json_f/order_mats_ttl.json
+2025-08-03 20:45:24,923 - INFO - Order ORD-20250803204524-B6IV created successfully
+2025-08-03 20:45:26,793 - INFO - \u2705 Exported 9 products to D:/capstone/json_f/order_mats_ttl.json
+2025-08-03 21:06:01,098 - INFO - Order ORD-20250803210601-MWPJ created successfully
+2025-08-03 21:06:02,073 - INFO - \u2705 Exported 10 products to D:/capstone/json_f/order_mats_ttl.json
+2025-08-04 21:58:09,280 - INFO - Client details viewed for ID: SuicideBoys, Time: 2025-08-04 21:58:09
+2025-08-04 21:59:13,922 - INFO - Product ORD-20250804215913-57IQ created succesfully, Time: 2025-08-04 21:57:27
+2025-08-04 21:59:15,160 - INFO - \u2705 Exported 5 products to D:/capstone/json_f/products_materials.json
+2025-08-04 21:59:40,740 - INFO - Order ORD-20250804215940-2LW7 created successfully
+2025-08-04 21:59:41,990 - INFO - \u2705 Exported 11 products to D:/capstone/json_f/order_mats_ttl.json
+2025-08-04 22:41:19,366 - INFO - Product ORD-20250804224119-558E created succesfully, Time: 2025-08-04 22:38:51
+2025-08-04 22:41:23,631 - INFO - \u2705 Exported 6 products to D:/capstone/json_f/products_materials.json
+2025-08-05 00:52:46,052 - INFO - Product ORD-20250804224119-558E updated successfully, Time: 2025-08-05 00:49:15
+2025-08-05 00:55:28,429 - INFO - Order ORD-20250805005528-BWJ6 created successfully
+2025-08-05 00:55:29,492 - INFO - \u2705 Exported 12 products to D:/capstone/json_f/order_mats_ttl.json
+2025-08-06 01:33:40,947 - INFO - Order ID ORD-20250729020402-6966 marked as delivered by User ID a at 2025-08-06 01:33:40
+2025-08-06 01:33:45,578 - INFO - Order ID ORD-20250729020402-6966 marked as delivered by User ID a at 2025-08-06 01:33:45
+2025-08-06 01:33:45,665 - INFO - Order ID ORD-20250729020402-6966 marked as delivered by User ID a at 2025-08-06 01:33:45
+2025-08-06 01:33:45,763 - INFO - Order ID ORD-20250729020402-6966 marked as delivered by User ID a at 2025-08-06 01:33:45
+2025-08-06 01:33:45,915 - INFO - Order ID ORD-20250729020402-6966 marked as delivered by User ID a at 2025-08-06 01:33:45
+2025-08-06 01:33:46,081 - INFO - Order ID ORD-20250729020402-6966 marked as delivered by User ID a at 2025-08-06 01:33:46
+2025-08-06 01:33:46,252 - INFO - Order ID ORD-20250729020402-6966 marked as delivered by User ID a at 2025-08-06 01:33:46
+2025-08-06 01:33:46,430 - INFO - Order ID ORD-20250729020402-6966 marked as delivered by User ID a at 2025-08-06 01:33:46
+2025-08-06 01:33:46,580 - INFO - Order ID ORD-20250729020402-6966 marked as delivered by User ID a at 2025-08-06 01:33:46
+2025-08-06 01:33:46,726 - INFO - Order ID ORD-20250729020402-6966 marked as delivered by User ID a at 2025-08-06 01:33:46
+2025-08-06 01:33:46,895 - INFO - Order ID ORD-20250729020402-6966 marked as delivered by User ID a at 2025-08-06 01:33:46
+2025-08-06 01:33:47,063 - INFO - Order ID ORD-20250729020402-6966 marked as delivered by User ID a at 2025-08-06 01:33:47
+2025-08-06 01:36:00,456 - INFO - Order ID ORD-20250729235628-W93U marked as delivered by User ID a at 2025-08-06 01:36:00
+2025-08-06 01:55:51,351 - ERROR - Order creation error: 'DatabaseManager' object has no attribute 'session'
+2025-08-06 02:00:27,909 - INFO - \u2705 Exported 11 products to D:/capstone/json_f/order_mats_ttl.json
+2025-08-06 02:01:59,674 - ERROR - Database integrity error: FOREIGN KEY constraint failed
+2025-08-06 02:02:49,738 - INFO - \u2705 Exported 11 products to D:/capstone/json_f/order_mats_ttl.json
+2025-08-06 02:02:55,285 - ERROR - Database integrity error: FOREIGN KEY constraint failed
+2025-08-06 02:02:56,515 - INFO - \u2705 Exported 11 products to D:/capstone/json_f/order_mats_ttl.json
+2025-08-06 02:11:30,584 - INFO - Order ORD-20250806021130-5UG3 created successfully
+2025-08-06 02:11:30,617 - INFO - Order history for ORD-20250806021130-5UG3 recorded successfully
+2025-08-06 02:11:30,617 - ERROR - Order creation error: table order_history has no column named changed_at
+2025-08-06 02:12:21,941 - INFO - Order ORD-20250806021221-9RUH created successfully
+2025-08-06 02:12:21,974 - ERROR - Failed to insert order history: FOREIGN KEY constraint failed
+2025-08-06 02:12:21,974 - INFO - Order history for ORD-20250806021221-9RUH recorded successfully
+2025-08-06 02:12:24,080 - INFO - \u2705 Exported 13 products to D:/capstone/json_f/order_mats_ttl.json
+2025-08-06 02:15:45,633 - INFO - Order ORD-20250806021545-GGAW created successfully
+2025-08-06 02:15:45,633 - ERROR - Failed to insert order history: FOREIGN KEY constraint failed
+2025-08-06 02:15:45,633 - INFO - Order history for ORD-20250806021545-GGAW recorded successfully
+2025-08-06 02:15:46,694 - INFO - \u2705 Exported 14 products to D:/capstone/json_f/order_mats_ttl.json
+2025-08-06 02:23:12,221 - INFO - Order ORD-20250806022312-6KD9 created successfully
+2025-08-06 02:23:12,233 - ERROR - Failed to insert order history: FOREIGN KEY constraint failed
+2025-08-06 02:23:12,233 - INFO - Order history for ORD-20250806022312-6KD9 recorded successfully
+2025-08-06 02:27:40,825 - INFO - Order history for ORD-20250806022735-BJTP recorded successfully
+2025-08-06 02:27:40,828 - ERROR - Order creation error: database is locked
+2025-08-06 02:28:10,271 - INFO - \u2705 Exported 15 products to D:/capstone/json_f/order_mats_ttl.json
+2025-08-06 02:30:52,684 - INFO - Order ORD-20250806023052-V9LB created successfully
+2025-08-06 02:30:52,699 - ERROR - Failed to insert order history: FOREIGN KEY constraint failed
+2025-08-06 02:30:52,699 - INFO - Order history for ORD-20250806023052-V9LB recorded successfully
+2025-08-06 02:32:39,820 - INFO - Order ORD-20250806023239-9DFM created successfully
+2025-08-06 02:32:39,841 - ERROR - Failed to insert order history: FOREIGN KEY constraint failed
+2025-08-06 02:32:39,841 - INFO - Order history for ORD-20250806023239-9DFM recorded successfully
+2025-08-06 02:32:40,692 - INFO - \u2705 Exported 17 products to D:/capstone/json_f/order_mats_ttl.json
+2025-08-06 02:38:30,718 - INFO - Order ORD-20250806023830-RRY1 created successfully
+2025-08-06 02:38:30,751 - ERROR - Failed to insert order history: FOREIGN KEY constraint failed
+2025-08-06 02:38:30,751 - INFO - Order history for ORD-20250806023830-RRY1 recorded successfully
+2025-08-06 02:38:31,468 - INFO - \u2705 Exported 18 products to D:/capstone/json_f/order_mats_ttl.json
+2025-08-06 02:40:56,765 - ERROR - Order creation error: No user is logged in. Please log in before creating an order.
+2025-08-06 02:40:56,838 - ERROR - Order creation error: No user is logged in. Please log in before creating an order.
+2025-08-06 02:40:58,890 - INFO - \u2705 Exported 18 products to D:/capstone/json_f/order_mats_ttl.json
+2025-08-06 02:46:23,609 - INFO - Order ORD-20250806024623-3SJH created successfully
+2025-08-06 02:49:28,476 - INFO - \u2705 Exported 19 products to D:/capstone/json_f/order_mats_ttl.json
+2025-08-06 02:49:57,520 - INFO - Order ID ORD-20250806023052-V9LB marked as delivered by User ID a at 2025-08-06 02:49:57
+2025-08-06 02:51:20,050 - INFO - Order ID ORD-20250806023052-V9LB marked as delivered by User ID a at 2025-08-06 02:51:20
+2025-08-06 18:52:16,976 - INFO - Client details viewed for ID: a, Time: 2025-08-06 18:52:16
+2025-08-06 18:52:22,340 - INFO - Client details viewed for ID: a, Time: 2025-08-06 18:52:22
+2025-08-06 18:54:52,531 - INFO - Client details viewed for ID: SuicideBoys, Time: 2025-08-06 18:54:52
+2025-08-07 20:00:03,207 - INFO - Client details viewed for ID: SuicideBoys, Time: 2025-08-07 20:00:03
+2025-08-07 20:05:10,197 - INFO - Client details viewed for ID: SuicideBoys, Time: 2025-08-07 20:05:10
+2025-08-10 00:50:26,176 - INFO - Profile image updated for user_id: nickdiaz, Time: 2025-08-10 00:50:26
+2025-08-11 19:09:21,813 - INFO - Client details viewed for ID: a, Time: 2025-08-11 19:09:21
+2025-08-11 19:16:33,705 - INFO - User nickdiaz logged out, Time: 2025-08-11 19:16:33, From: user_sets
+2025-08-12 03:11:56,218 - INFO - User nate logged out, Time: 2025-08-12 03:11:56
+2025-08-17 16:20:15,686 - INFO - Client details viewed for ID: a, Time: 2025-08-17 16:20:15
+2025-08-17 16:30:49,565 - INFO - Order ID ORD-20250806022312-6KD9 marked as delivered by User ID nate at 2025-08-17 16:30:49
+2025-08-17 16:51:02,320 - INFO - Mail sent from nate to admin with subject 'asdasd' at 2025-08-17 16:50:47
+2025-08-17 23:57:09,967 - ERROR - Error searching user logs: near "=": syntax error
+Traceback (most recent call last):
+  File "D:\capstone\user_log.py", line 129, in search_logs
+    user_logs = c.execute("SELECT * FROM user_logs WHERE user_id LIKE = ?", ("%" + searched + "%",)).fetchall()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: near "=": syntax error
+2025-08-20 19:15:45,126 - INFO - Client details viewed for ID: a, Time: 2025-08-20 19:15:45
+2025-08-20 19:33:17,204 - INFO - Client details viewed for ID: a, Time: 2025-08-20 19:33:17
+2025-08-20 19:33:26,074 - INFO - Client details viewed for ID: SuicideBoys, Time: 2025-08-20 19:33:26
+2025-08-21 22:43:24,465 - ERROR - Database Error: no such table: messages
+2025-08-21 22:46:31,646 - INFO - Mail sent from nate to entombed with subject 'ewan' at 2025-08-21 22:46:22
+2025-08-21 22:46:53,330 - INFO - Reply sent from nate to nate with subject 'Reply: ewan' at 2025-08-21 22:46:52
+2025-08-22 00:37:18,154 - ERROR - Database Error: no such table: messages
+2025-08-22 00:38:31,034 - ERROR - Error while creating Add Client window: 'str' object has no attribute '_root'
+2025-08-22 01:19:19,982 - ERROR - Error while creating Add Client window: 'str' object has no attribute '_root'
+2025-08-22 01:25:05,995 - ERROR - Error while creating Add Client window: 'str' object has no attribute '_root'
+2025-08-22 01:29:04,384 - ERROR - Error while creating Add Client window: 'str' object has no attribute '_root'
+2025-08-22 02:01:04,729 - INFO - Mail sent from nate to admin with subject '' at 2025-08-22 01:53:24
+2025-08-22 20:12:33,597 - INFO - Mail sent from nate to admin with subject '' at 2025-08-22 20:12:31
+2025-08-22 20:40:43,512 - WARNING - No results found for priority: High
+2025-08-22 20:40:46,741 - WARNING - No results found for priority: Normal
+2025-08-22 20:40:49,936 - WARNING - No results found for priority: Low
+2025-08-22 20:41:10,896 - INFO - Mail sent from nate to admin with subject 'downswing' at 2025-08-22 20:40:55
+2025-08-22 20:41:14,975 - WARNING - No results found for priority: Low
+2025-08-22 20:41:21,781 - WARNING - No results found for priority: Low
+2025-08-22 21:07:07,845 - INFO - Mail sent from nate to admin with subject 'Ewan' at 2025-08-22 21:06:59
+2025-08-22 21:07:16,689 - ERROR - Database Error: no such table: messages, unable to search for term: admin
+2025-08-22 21:12:34,936 - ERROR - Database Error: no such table: messages, unable to search for term: admin
+2025-08-22 21:14:45,608 - ERROR - Database Error: no such table: messages, unable to search for term: nate
+2025-08-23 00:04:11,408 - INFO - Mail sent from nate to admin with subject 'Try' at 2025-08-23 00:03:13
+2025-08-23 00:05:31,475 - INFO - Mail sent from nate to admin with subject 'No Attach' at 2025-08-23 00:05:20
+2025-08-23 00:48:20,562 - INFO - Mail with ID 1 deleted successfully.
+2025-08-23 16:53:57,828 - INFO - Reply sent from nate to nate with subject 'Reply: No Attach' at 2025-08-23 16:53:56
+2025-08-23 16:55:17,078 - INFO - Reply sent from nate to nate with subject 'Reply: Reply: No Attach' at 2025-08-23 16:55:15
+2025-08-23 16:58:24,858 - INFO - Mail sent from nate to admin with subject 'attachemnt' at 2025-08-23 16:58:10
+2025-08-23 16:59:01,839 - INFO - Mail sent from nate to admin with subject 'try' at 2025-08-23 16:58:42
+2025-08-23 17:01:13,447 - INFO - Reply sent from nate to nate with subject 'Reply: try' at 2025-08-23 17:01:12
+2025-08-23 17:01:43,330 - INFO - Mail sent from nate to admin with subject 'try mail new' at 2025-08-23 17:01:22
+2025-08-23 17:02:04,279 - INFO - Mail sent from nate to admin with subject '2' at 2025-08-23 17:01:54
+2025-08-24 01:20:30,033 - ERROR - Error adding supplier 'pwet_ni_karen, Time: 2025-08-24 01:20:28: Incorrect number of bindings supplied. The current statement uses 4, and there are 7 supplied.
+2025-08-24 01:29:55,494 - ERROR - Error adding supplier 'pwet_ni_karen, Time: 2025-08-24 01:29:51: CHECK constraint failed: LENGTH(supplier_num) >= 10
+2025-08-24 01:40:34,348 - INFO - Added supplier pwetnikaren, Time: 2025-08-24 01:40:33
+2025-08-24 16:06:05,935 - INFO - Updated Rating for supplier pwetnikaren to '4', Time: 2025-08-24 16:06:01
+2025-08-25 00:08:17,666 - INFO - Added supplier pwetnikaren, Time: 2025-08-25 00:08:16
+2025-08-25 22:38:54,489 - INFO - Product ORD-20250825223854-8X5M created succesfully, Time: 2025-08-25 22:36:57
+2025-08-25 22:38:56,287 - ERROR - \u274c Export failed: [Errno 2] No such file or directory: 'C:/capstone/json_f/products_materials.json'
+2025-08-25 22:44:38,052 - WARNING - Product ORD-20250825223854-8X5M deleted from database. Time: 2025-08-25 22:42:40
+2025-08-25 22:45:07,959 - INFO - Product ORD-20250825224507-2C9U created succesfully, Time: 2025-08-25 22:42:40
+2025-08-25 22:45:08,984 - ERROR - \u274c Export failed: [Errno 2] No such file or directory: 'C:/capstone/json_f/products_materials.json'
+2025-08-25 22:55:06,648 - INFO - Product ORD-20250825225506-FTJP created succesfully, Time: 2025-08-25 22:54:18
+2025-08-25 22:55:07,898 - ERROR - \u274c Export failed: [Errno 2] No such file or directory: 'C:/capstone/json_f/products_materials.json'
+2025-08-25 23:01:42,074 - INFO - Product ORD-20250825230142-6UMA created succesfully, Time: 2025-08-25 23:00:50
+2025-08-25 23:01:43,205 - INFO - \u2705 Exported 9 products to D:/capstone/json_f/products_materials.json
+2025-08-25 23:02:28,264 - INFO - Order ORD-20250825230228-SHAO created successfully
+2025-08-25 23:02:29,174 - INFO - \u2705 Exported 15 products to D:/capstone/json_f/order_mats_ttl.json
+2025-08-25 23:18:43,836 - INFO - Order ORD-20250825231843-H4EC created successfully
+2025-08-25 23:18:45,113 - INFO - \u2705 Exported 16 products to D:/capstone/json_f/order_mats_ttl.json
+2025-08-25 23:18:52,120 - WARNING - Not enough stock for material nail. Needed: 25.0, Available: 10
+2025-08-25 23:19:44,605 - WARNING - Not enough stock for material nail. Needed: 25.0, Available: 10
+2025-08-25 23:27:54,638 - INFO - Order ORD-20250825232754-2RSZ created successfully
+2025-08-25 23:27:55,803 - INFO - \u2705 Exported 17 products to D:/capstone/json_f/order_mats_ttl.json
+2025-08-25 23:27:59,938 - INFO - Order ORD-20250825232754-2RSZ has been approved, Time: 2025-08-25 23:26:44
+2025-08-25 23:28:02,068 - INFO - \u2705 Exported 9 products to D:/capstone/json_f/products_materials.json
+2025-08-25 23:29:42,321 - INFO - Order ORD-20250825232942-FOJR created successfully
+2025-08-25 23:29:43,410 - INFO - \u2705 Exported 18 products to D:/capstone/json_f/order_mats_ttl.json

@@ -1,0 +1,68 @@
+[
+    {
+        "product_id": "PROD_001",
+        "product_name": "test1_new_list_mats",
+        "materials": {
+            "pwet": 5
+        }
+    },
+    {
+        "product_id": "PROD_002",
+        "product_name": "test",
+        "materials": {
+            "pwet": 1
+        }
+    },
+    {
+        "product_id": "PROD_003",
+        "product_name": "test6",
+        "materials": {
+            "pwet": 15
+        }
+    },
+    {
+        "product_id": "ORD-20250729020147-9M2O",
+        "product_name": "pwet_ni_karen",
+        "materials": {
+            "pwet": 5
+        }
+    },
+    {
+        "product_id": "ORD-20250804215913-57IQ",
+        "product_name": "test_prod",
+        "materials": {
+            "pwet": 1
+        }
+    },
+    {
+        "product_id": "ORD-20250804224119-558E",
+        "product_name": "pwet_ni_karen",
+        "materials": {
+            "pwet": 3
+        }
+    },
+    {
+        "product_id": "ORD-20250825224507-2C9U",
+        "product_name": "new_inventory_prod",
+        "materials": {
+            "pwet": 6,
+            "nail": 12
+        }
+    },
+    {
+        "product_id": "ORD-20250825225506-FTJP",
+        "product_name": "new_inventory_test",
+        "materials": {
+            "pwet": 5,
+            "nail": 5
+        }
+    },
+    {
+        "product_id": "ORD-20250825230142-6UMA",
+        "product_name": "new_test_prod_invpwe",
+        "materials": {
+            "pwet": 5,
+            "nail": 5
+        }
+    }
+]
