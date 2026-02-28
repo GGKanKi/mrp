@@ -1,3 +1,5 @@
+![Project Banner](novus_logo1.png)
+
 NovusMRP: Material Requirements Planning System
 Overview
 NovusMRP is a specialized Material Requirements Planning system designed for NOVUS INDUSTRY SOLUTIONS to streamline inventory management, procurement, and production tracking. This system serves as the capstone project for BACHELOR OF SCIENCE IN INFORMATION TECHNOLOGY at CITY COLLEGE OF CALAMBA.
