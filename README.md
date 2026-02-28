@@ -1,4 +1,4 @@
-![Project Banner](novus_logo1.png)
+![Project Banner](labels/novus_logo1.png)
 
 NovusMRP: Material Requirements Planning System
 Overview
