@@ -40,14 +40,34 @@ class DatabaseManager:
         return conn
     
     def init_database(self):
-        """Initialize the database with the provided schema"""
-        conn = self.get_connection()
-        c = conn.cursor()
-        
+        """Initialize the database with the provided schema.
 
-        conn.commit()
-        conn.close()
-    
+        This method attempts to delegate schema creation to the
+        `update_db.create_database` helper so that the same table
+        definitions are used in both development and when the
+        application runs.  If the import fails for any reason we
+        simply log the error and continue; the database connection
+        will still be opened which allows later code to use it.
+        """
+        # try to ensure the database file and tables exist
+        try:
+            # import locally to avoid circular dependencies at module
+            # import time; update_db also imports sqlite3, datetime, etc.
+            from update_db import create_database
+            create_database()
+        except Exception as e:
+            # fallback: just log and continue; table creation may already
+            # have been performed manually or by another process
+            logging.warning(f"Unable to run update_db.create_database: {e}")
+
+        # open/close a connection so that self.db_name is touched and any
+        # preliminary PRAGMAs are applied
+        conn = self.get_connection()
+        try:
+            c = conn.cursor()
+            conn.commit()
+        finally:
+            conn.close()
     def generate_product_id(self):
         """Generate a more unique order ID using timestamp and randomness"""
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")

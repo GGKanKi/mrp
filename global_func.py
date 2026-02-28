@@ -5,7 +5,6 @@ import pytz
 # --- Pathing Setup ---
 import os
 import sys
-from dotenv import load_env
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """

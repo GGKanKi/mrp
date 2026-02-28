@@ -3,7 +3,10 @@ from datetime import datetime
 import os
 import hashlib
 
-DB_NAME = "main.db"
+from global_func import resource_path
+
+# ensure the database file uses the same resource path as the application
+DB_NAME = resource_path("main.db")
 
 def get_connection():
     """Always return a connection with PRAGMA foreign_keys enabled."""
