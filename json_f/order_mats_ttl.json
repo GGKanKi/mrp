@@ -1,0 +1,18 @@
+[
+    {
+        "order_id": "ORD-20251124123224-8FOM",
+        "order_name": "client1_wooden chair",
+        "mats_need": {
+            "nail": 15.0,
+            "wood": 15.0
+        }
+    },
+    {
+        "order_id": "ORD-20251126201516-WK52",
+        "order_name": "client1_wooden door",
+        "mats_need": {
+            "wood": 3500.0,
+            "nail": 3500.0
+        }
+    }
+]

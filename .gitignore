@@ -1,0 +1,30 @@
+# Secret Files
+.env
+
+# Python Bytecode
+__pycache__/
+*.pyc
+
+# Build Artifacts (Your compiled app)
+dist/
+build/
+*.spec
+
+# IDE / VS Code settings
+.vscode/
+
+# Logs
+*.log
+
+# Personal/OS files
+.DS_Store
+
+# TOKENS & API
+new_cred.json
+token.json
+api.py
+
+
+# Compiled Executables
+*.exe
+*.spec
