@@ -22,7 +22,6 @@ build/
 # TOKENS & API
 new_cred.json
 token.json
-api.py
 
 
 # Compiled Executables
