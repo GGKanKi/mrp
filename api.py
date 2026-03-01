@@ -19,3 +19,10 @@ ACTION_LOG = os.getenv('ACTION_LOG')
 PRODUCT_LOG = os.getenv('PRODUCT_LOG')
 SETTING_LOG = os.getenv('SETTING_LOG')
 RESTOCK_LOG = os.getenv('RESTOCK_LOG')
+
+
+# SYNC LOG FILES
+ACTION_SYNC = os.path.join(BASE_DIR, "sync_txt", "action_sync.log")
+PRODUCT_SYNC = os.path.join(BASE_DIR, "sync_txt", "product_sync.log")
+SETTINGS_SYNC = os.path.join(BASE_DIR, "sync_txt", "settings_sync.log")
+USER_SYNC = os.path.join(BASE_DIR, "sync_txt", "user_sync.log")

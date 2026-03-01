@@ -66,6 +66,9 @@ import smtplib
 # API IMPORT
 from api import CRED_PATH, TOKEN_PATH, USER_LOG, ACTION_LOG, PRODUCT_LOG, SETTING_LOG, RESTOCK_LOG
 
+# LOG FILE IMPORTS
+from api import ACTION_SYNC, PRODUCT_SYNC, SETTINGS_SYNC, USER_SYNC
+
 #Import Web Browser
 import webbrowser
 
@@ -283,11 +286,10 @@ SHEETS = {
 
 }
 
-user_last_sync = os.path.join(BASE_DIR, "sync_txt", "user_sync.log")
-action_last_sync = os.path.join(BASE_DIR, "sync_txt", "action_sync.log")
-product_last_sync = os.path.join(BASE_DIR, "sync_txt", "product_sync.log")
-settings_last_sync = os.path.join(BASE_DIR, "sync_txt", "settings_sync.log")
-restock_last_sync = os.path.join(BASE_DIR, "sync_txt", "restock_sync.log")
+user_last_sync = USER_SYNC
+action_last_sync = ACTION_SYNC
+product_last_sync = PRODUCT_SYNC
+settings_last_sync = SETTING_LOG
 
 # ----------------- OAUTH LOGIN -----------------
 def get_credentials(controller=None):
