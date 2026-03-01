@@ -162,6 +162,73 @@ The schema uses foreign‑key constraints with ON DELETE/UPDATE rules to maintai
 integrity.  Refer to `update_db.py` for the full DDL if precise column
 definitions are needed.
 
+## 8. User Roles & Hierarchy
+
+Access in NovusMRP is governed by a simple hierarchy of user types stored in
+the `usertype` column of the `users` table.  The allowed values are defined in
+the database schema as:
+
+```sql
+CHECK(usertype IN ('admin', 'manager', 'staff', 'supplier'))
+```
+
+- **admin** – unlimited permissions; can manage users, view and edit all data,
+  configure system settings.
+- **manager** – oversees operations, processes orders, and generates reports.
+- **staff** – performs routine data entry such as updating inventory and
+  creating client records.
+- **supplier** – external users who can view orders relevant to them and
+  update material shipments.
+
+The main application checks `self.session['usertype']` when deciding which
+frames or controls to enable; for example, only admins see the user management
+pages and audit logs.
+
+```mermaid
+flowchart TD
+    Admin --> Manager
+    Manager --> Staff
+    Admin --> Supplier
+```
+
+## 9. Diagram Summary
+
+Below are handy visualizations that accompany the textual flow described above.
+
+### Navigation Flow
+
+```mermaid
+flowchart TD
+    A[Start: Run main_sys.py] --> B[Splash Screen]
+    B --> C[Login Page]
+    C -->|New user| D[Signup Page]
+    D --> C
+    C -->|Valid creds| E[Main Dashboard]
+    E --> F[Select Module]
+    F --> G{Module Type}
+    G --> H(Inventory / Products)
+    G --> I(Suppliers / Clients)
+    G --> J(Orders)
+    G --> K(Audits / Logs)
+    G --> L(Messages / Notifications)
+    E --> M[Logout / Exit]
+    M --> N[Confirm & Save Logs]
+    N --> O[Shutdown]
+```
+
+### Component/Data Flow
+
+```mermaid
+flowchart LR
+    UI[User Interface] -->|user actions| Controller[Application Controller]
+    Controller -->|queries/updates| DB[(SQLite DB)]
+    DB -->|returns data| Controller
+    Controller -->|render updates| UI
+    Controller -->|log events| Logs[Log files / user_logs]
+    UI -->|notifications| Controller
+    Controller -->|send messages| Mail[Email/SMS (mails.py)]
+```
+
 ---
 
 This system flow document can be expanded as the application grows; modules can
