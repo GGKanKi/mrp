@@ -70,8 +70,8 @@ python main_sys.py
 
 ## Thesis Details
 
-- **Developed by:** GGKanki, Abcdy, Rhomar, Jade
-- **Documentation by:** GGKanki, Rhomar, Jade
+- **Developed by:** GGKanki, Abcdy Romer Narvarte, Rhomar A. Labandillo, Justine Jade A. Abrera
+- **Documentation by:** GGKanki, Rhomar A. Labandillo, Justine Jade A. Abrera
 - **Verified by:** Rommel T. Garma, PhD
 - **Adviser:** Rommel T. Garma
 - **Company Partner:** NOVUS INDUSTRY SOLUTIONS
